@@ -67,6 +67,12 @@
         <div class="mb-3">
             <div class="row g-2 mb-2">
                 <div class="col-lg-4 col-md-6 mb-2">
+                    <select id="coverTypeSelect" class="form-select form-select-sm">
+                        <option value="type1" selected>Обложка тип 1</option>
+                        <option value="type2">Обложка тип 2</option>
+                    </select>
+                </div>
+                <div class="col-lg-8 col-md-6 mb-2">
                     <select id="iconSelect" class="form-select form-select-sm">
                         <option value="none" selected>Без логотипа</option>
                         <option value="club">Club</option>
@@ -74,13 +80,6 @@
                         <option value="steam">Steam</option>
                         <option value="origin">Origin</option>
                     </select>
-                </div>
-                <div class="col-lg-8 col-md-6 mb-2">
-                    <div class="btn-group w-100">
-                        <button id="uploadBtn1" class="btn btn-sm btn-success">Фон</button>
-                        <button id="uploadBtn2" class="btn btn-sm btn-danger">Логотип</button>
-                        <button id="uploadBtn3" class="btn btn-sm btn-warning">Доп. картинка</button>
-                    </div>
                 </div>
             </div>
             
@@ -93,13 +92,23 @@
                 </div>
                 <div class="col-lg-8 col-md-6 mb-2">
                     <div class="btn-group w-100">
-                        <button id="saveManual" class="btn btn-sm btn-primary">Сохр. вручную</button>
-                        <button id="saveBlobUrl" class="btn btn-sm btn-danger">PNG (метод 1)</button>
-                        <button id="saveDataUrl" class="btn btn-sm btn-warning">PNG (метод 2)</button>
+                        <button id="uploadBtn1" class="btn btn-sm btn-success">Фон</button>
+                        <button id="uploadBtn2" class="btn btn-sm btn-danger">Логотип</button>
+                        <button id="uploadBtn3" class="btn btn-sm btn-warning">Доп. картинка</button>
                     </div>
                 </div>
             </div>
             
+            <div class="row g-2 mb-2">
+                <div class="col-lg-12 col-md-12 mb-2">
+                    <div class="btn-group w-100">
+                        <button id="saveManual" class="btn btn-sm btn-primary">Сохр. вручную</button>
+                        <button id="saveBlobUrl" class="btn btn-sm btn-danger">Сохр. (метод 1)</button>
+                        <button id="saveDataUrl" class="btn btn-sm btn-warning">Сохр. (метод 2)</button>
+                    </div>
+                </div>
+            </div>
+
         <input type="file" id="imageUpload1" accept="image/*" style="display: none;">
         <input type="file" id="imageUpload2" accept="image/*" style="display: none;">
         <input type="file" id="imageUpload3" accept="image/*" style="display: none;">
@@ -322,6 +331,7 @@
                 topCustom: null,
                 topMostCustom: null
             },
+            coverType: 'type1', // Тип обложки, по умолчанию type1 (папка img)
             bottomCustomImage: {
                 x: 0,
                 y: 0,
@@ -724,8 +734,11 @@
 
         async function init() {
             try {
-                state.images.background = await loadImage('./img/Bgiconsize.png');
-                state.images.topLayer = await loadImage('./img/Toplayer.png');
+                // Определяем путь к папке в зависимости от выбранного типа обложки
+                const imgFolder = state.coverType === 'type1' ? './img/' : './img2/';
+                
+                state.images.background = await loadImage(imgFolder + 'Bgiconsize.png');
+                state.images.topLayer = await loadImage(imgFolder + 'Toplayer.png');
                 await updateIcon(state.selectedIcon);
                 drawCanvas();
             } catch (error) {
@@ -740,7 +753,10 @@
                     state.images.icon = null;
                     drawCanvas();
                 } else {
-                    state.images.icon = await loadImage(`./img/${iconType}.png`);
+                    // Определяем путь к папке в зависимости от выбранного типа обложки
+                    const imgFolder = state.coverType === 'type1' ? './img/' : './img2/';
+                    
+                    state.images.icon = await loadImage(imgFolder + iconType + '.png');
                     drawCanvas();
                 }
             } catch (error) {
@@ -751,6 +767,44 @@
         iconSelect.addEventListener('change', (e) => {
             state.selectedIcon = e.target.value;
             updateIcon(state.selectedIcon);
+        });
+        
+        // Добавляем обработчик для выбора типа обложки
+        const coverTypeSelect = document.getElementById('coverTypeSelect');
+        coverTypeSelect.addEventListener('change', (e) => {
+            state.coverType = e.target.value;
+            
+            // Перезагружаем изображения для нового типа обложки
+            init();
+            
+            // Сбрасываем загруженные пользовательские изображения
+            state.images.bottomCustom = null;
+            state.images.topCustom = null;
+            state.images.topMostCustom = null;
+            
+            // Обновляем интерфейс и скрываем настройки
+            document.getElementById('settingsPanel').classList.add('d-none');
+            
+            // Устанавливаем параметры позиционирования в зависимости от типа обложки
+            if (state.coverType === 'type2') {
+                // Для второго типа используем другие параметры позиционирования логотипа
+                state.logoPositioningParams = {
+                    upperBound: (canvas.height - 200) / 2, // Высота области для логотипа
+                    verticalOffset: 180, // Смещение вверх для второго типа обложки
+                    maxWidth: 500, // Максимальная ширина для логотипа
+                    maxHeight: 200 // Максимальная высота для логотипа
+                };
+            } else {
+                // Для первого типа используем оригинальные параметры
+                state.logoPositioningParams = {
+                    upperBound: (canvas.height - 145) / 2,
+                    verticalOffset: 223, // Смещение вниз для первого типа обложки
+                    maxWidth: 500, // Максимальная ширина для логотипа
+                    maxHeight: 145 // Максимальная высота для логотипа
+                };
+            }
+            
+            drawCanvas();
         });
 
         uploadBtn1.addEventListener('click', () => {
@@ -810,18 +864,20 @@
                 reader.onload = (event) => {
                     const img = new Image();
                     img.onload = () => {
-                        // Максимальный размер 600×145 для второго изображения
-                        const maxWidth = 600;
-                        const maxHeight = 145;
+                        // Используем параметры из state.logoPositioningParams
+                        const maxWidth = state.logoPositioningParams.maxWidth;
+                        const maxHeight = state.logoPositioningParams.maxHeight;
                         const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
                         
                         state.images.topCustom = img;
                         
-                        // Центрирование в области 500x145 в центре холста
-                        const upperBound = (canvas.height - 145) / 2;
+                        // Центрирование с учетом параметров позиционирования
+                        const upperBound = state.logoPositioningParams.upperBound;
+                        const verticalOffset = state.logoPositioningParams.verticalOffset;
+                        
                         state.topCustomImage = {
                             x: (canvas.width - img.width * scale) / 2, // Центрирование по горизонтали
-                            y: upperBound + (145 - img.height * scale) / 2 + 223, // Спускаем на 223px ниже центра
+                            y: upperBound + (state.logoPositioningParams.maxHeight - img.height * scale) / 2 + verticalOffset,
                             scale: scale,
                             isDragging: false,
                             lastX: 0,
@@ -1047,10 +1103,15 @@
                 // Ограничиваем горизонтальное перемещение, чтобы не выходить за пределы с учетом отступов
                 newX = Math.max(0, Math.min(newX, canvas.width - width));
                 
-                // Ограничиваем вертикальное перемещение в пределах области 600x145 с учетом смещения на 223px вниз
-                const upperBound = (canvas.height - 145) / 2 + 223;
-                const lowerBound = upperBound + 145 - height;
-                newY = Math.max(upperBound, Math.min(newY, lowerBound));
+                // Используем параметры из logoPositioningParams
+                const upperBound = state.logoPositioningParams.upperBound;
+                const maxHeight = state.logoPositioningParams.maxHeight;
+                const verticalOffset = state.logoPositioningParams.verticalOffset;
+                
+                // Ограничиваем вертикальное перемещение в пределах области
+                const effectiveUpperBound = upperBound + verticalOffset;
+                const lowerBound = effectiveUpperBound + maxHeight - height;
+                newY = Math.max(effectiveUpperBound, Math.min(newY, lowerBound));
                 
                 // Применяем новые координаты
                 state.topCustomImage.x = newX;
@@ -1488,17 +1549,18 @@
         // Центрирование логотипа
         logoCenter.addEventListener('click', () => {
             if (state.images.topCustom) {
-                // Центрирование в области 500x145 в центре холста
+                // Центрирование с учетом параметров позиционирования
                 const scale = state.topCustomImage.scale;
                 const width = state.images.topCustom.width * scale;
                 const height = state.images.topCustom.height * scale;
                 
-                // Вычисляем границы области 500x145
-                const upperBound = (canvas.height - 145) / 2;
+                // Используем параметры из state.logoPositioningParams
+                const upperBound = state.logoPositioningParams.upperBound;
+                const verticalOffset = state.logoPositioningParams.verticalOffset;
                 
                 // Центрирование логотипа по горизонтали и вертикали в пределах области
                 state.topCustomImage.x = (canvas.width - width) / 2;
-                state.topCustomImage.y = upperBound + (145 - height) / 2 + 223; // Спускаем на 223px ниже центра
+                state.topCustomImage.y = upperBound + (state.logoPositioningParams.maxHeight - height) / 2 + verticalOffset;
                 
                 drawCanvas();
             }
@@ -1508,9 +1570,9 @@
         const logoRecommendedSize = document.getElementById('logo-recommended-size');
         logoRecommendedSize.addEventListener('click', () => {
             if (state.images.topCustom) {
-                // Устанавливаем рекомендуемый размер (500x145)
-                const recommendedWidth = 500;
-                const recommendedHeight = 145;
+                // Устанавливаем рекомендуемый размер с учетом параметров позиционирования
+                const recommendedWidth = state.logoPositioningParams.maxWidth;
+                const recommendedHeight = state.logoPositioningParams.maxHeight;
                 
                 // Вычисляем масштаб для достижения рекомендуемого размера
                 const originalWidth = state.images.topCustom.width;
@@ -1526,12 +1588,13 @@
                 const width = originalWidth * scale;
                 const height = originalHeight * scale;
                 
-                // Вычисляем границы области
-                const upperBound = (canvas.height - 145) / 2;
+                // Используем параметры из state.logoPositioningParams
+                const upperBound = state.logoPositioningParams.upperBound;
+                const verticalOffset = state.logoPositioningParams.verticalOffset;
                 
                 // Центрирование логотипа по горизонтали и вертикали в пределах области
                 state.topCustomImage.x = (canvas.width - width) / 2;
-                state.topCustomImage.y = upperBound + (145 - height) / 2 + 223; // Спускаем на 223px ниже центра
+                state.topCustomImage.y = upperBound + (recommendedHeight - height) / 2 + verticalOffset;
                 
                 drawCanvas();
             }
@@ -1598,10 +1661,15 @@
             // Рассчитываем новую позицию
             let newY = state.topCustomImage.y + step;
             
+            // Используем параметры из state.logoPositioningParams
+            const upperBound = state.logoPositioningParams.upperBound;
+            const maxHeight = state.logoPositioningParams.maxHeight;
+            const verticalOffset = state.logoPositioningParams.verticalOffset;
+            
             // Ограничиваем вертикальное перемещение в пределах области
-            const upperBound = (canvas.height - 145) / 2 + 223;
-            const lowerBound = upperBound + 145 - height;
-            newY = Math.max(upperBound, Math.min(newY, lowerBound));
+            const effectiveUpperBound = upperBound + verticalOffset;
+            const lowerBound = effectiveUpperBound + maxHeight - height;
+            newY = Math.max(effectiveUpperBound, Math.min(newY, lowerBound));
             
             // Применяем новую позицию
             state.topCustomImage.y = newY;
@@ -1758,6 +1826,14 @@
 
         // При загрузке страницы
         window.addEventListener('load', () => {
+            // Инициализируем параметры позиционирования логотипа
+            state.logoPositioningParams = {
+                upperBound: (canvas.height - 145) / 2,
+                verticalOffset: 223, // Смещение вниз для первого типа обложки
+                maxWidth: 500, // Максимальная ширина для логотипа
+                maxHeight: 145 // Максимальная высота для логотипа
+            };
+            
             // Настраиваем канвас
             resizeCanvas();
             
