@@ -1,1 +1,1169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор обложек игр</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .canvas-container {
+            border: 1px solid #dee2e6;
+            margin: 0 auto;
+            width: 600px;
+            height: 900px;
+            position: relative;
+        }
+        canvas {
+            display: block;
+        }
+        .help-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #495057;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .help-text p {
+            margin: 0 0 2px 0;
+        }
+        
+        /* Custom button colors */
+        .btn-purple {
+            background-color: #6f42c1;
+            color: white;
+        }
+        .btn-purple:hover {
+            background-color: #5e35b1;
+            color: white;
+        }
+        
+        .btn-orange {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .btn-orange:hover {
+            background-color: #e8710a;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Генератор обложек игр</h1>
+        
+        <div class="mb-3">
+            <div class="row g-2 mb-2">
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <select id="iconSelect" class="form-select form-select-sm">
+                        <option value="none" selected>Без логотипа</option>
+                        <option value="club">Club</option>
+                        <option value="rental">Rental</option>
+                        <option value="steam">Steam</option>
+                        <option value="origin">Origin</option>
+                    </select>
+                </div>
+                <div class="col-lg-8 col-md-6 mb-2">
+                    <div class="btn-group w-100">
+                        <button id="uploadBtn1" class="btn btn-sm btn-success">Фон</button>
+                        <button id="uploadBtn2" class="btn btn-sm btn-danger">Логотип</button>
+                        <button id="uploadBtn3" class="btn btn-sm btn-warning">Доп. картинка</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-2 mb-2">
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <div class="btn-group w-100">
+                        <button id="logo-center" class="btn btn-sm btn-purple">Центр</button>
+                        <button id="logo-recommended-size" class="btn btn-sm btn-orange">Рек. размер</button>
+                    </div>
+                </div>
+                <div class="col-lg-8 col-md-6 mb-2">
+                    <div class="btn-group w-100">
+                        <button id="saveManual" class="btn btn-sm btn-primary">Сохр. вручную</button>
+                        <button id="saveBlobUrl" class="btn btn-sm btn-danger">Сохр. (метод 1)</button>
+                        <button id="saveDataUrl" class="btn btn-sm btn-warning">Сохр. (метод 2)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <input type="file" id="imageUpload1" accept="image/*" style="display: none;">
+        <input type="file" id="imageUpload2" accept="image/*" style="display: none;">
+        <input type="file" id="imageUpload3" accept="image/*" style="display: none;">
 
+        <div class="canvas-container mx-auto">
+            <canvas id="iconCanvas" width="600" height="900"></canvas>
+        </div>
+
+        <div class="help-text mb-3 small">
+            <p><strong>Управление:</strong></p>
+            <p>• Перетаскивание: выберите и перетащите изображение</p>
+            <p>• Изменение размера: прокрутите колесико мыши над изображением</p>
+            <p>• Точное изменение размера: прокрутка + Shift для более точного контроля</p>
+            <p>• Стрелки: перемещение логотипа на 5px, Shift + стрелки: на 1px</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('iconCanvas');
+        const ctx = canvas.getContext('2d');
+        const iconSelect = document.getElementById('iconSelect');
+        const uploadBtn1 = document.getElementById('uploadBtn1');
+        const imageUpload1 = document.getElementById('imageUpload1');
+        const uploadBtn2 = document.getElementById('uploadBtn2');
+        const imageUpload2 = document.getElementById('imageUpload2');
+        const uploadBtn3 = document.getElementById('uploadBtn3');
+        const imageUpload3 = document.getElementById('imageUpload3');
+        
+        const state = {
+            images: {
+                background: null,
+                icon: null,
+                topLayer: null,
+                bottomCustom: null,
+                topCustom: null,
+                topMostCustom: null
+            },
+            bottomCustomImage: {
+                x: 0,
+                y: 0,
+                scale: 1,
+                isDragging: false,
+                lastX: 0,
+                lastY: 0
+            },
+            topCustomImage: {
+                x: 0,
+                y: 0,
+                scale: 1,
+                isDragging: false,
+                lastX: 0,
+                lastY: 0
+            },
+            topMostCustomImage: {
+                x: 0,
+                y: 0,
+                scale: 1,
+                isDragging: false,
+                lastX: 0,
+                lastY: 0
+            },
+            activeDragImage: null,
+            activeHoverImage: null,
+            selectedIcon: 'none'
+        };
+
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+        }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Создаем временный canvas для работы с маской
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Сначала рисуем фон на временном canvas
+            if (state.images.background) {
+                tempCtx.drawImage(state.images.background, 0, 0, tempCanvas.width, tempCanvas.height);
+            }
+            
+            // Сохраняем маску из фона
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width = canvas.width;
+            maskCanvas.height = canvas.height;
+            const maskCtx = maskCanvas.getContext('2d');
+            
+            if (state.images.background) {
+                maskCtx.drawImage(state.images.background, 0, 0, maskCanvas.width, maskCanvas.height);
+            }
+            
+            // Очищаем временный холст и заново рисуем все слои
+            tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Рисуем фон
+            if (state.images.background) {
+                tempCtx.drawImage(state.images.background, 0, 0, tempCanvas.width, tempCanvas.height);
+            }
+            
+            // Рисуем нижнее пользовательское изображение (после фона)
+            if (state.images.bottomCustom) {
+                const { x, y, scale } = state.bottomCustomImage;
+                const width = state.images.bottomCustom.width * scale;
+                const height = state.images.bottomCustom.height * scale;
+                tempCtx.drawImage(state.images.bottomCustom, x, y, width, height);
+            }
+            
+            // Рисуем верхний слой (контур)
+            if (state.images.topLayer) {
+                tempCtx.drawImage(state.images.topLayer, 0, 0, tempCanvas.width, tempCanvas.height);
+            }
+            
+            // Рисуем верхнее пользовательское изображение
+            if (state.images.topCustom) {
+                const { x, y, scale } = state.topCustomImage;
+                const width = state.images.topCustom.width * scale;
+                const height = state.images.topCustom.height * scale;
+                tempCtx.drawImage(state.images.topCustom, x, y, width, height);
+            }
+            
+            // Рисуем самое верхнее пользовательское изображение
+            if (state.images.topMostCustom) {
+                const { x, y, scale } = state.topMostCustomImage;
+                const width = state.images.topMostCustom.width * scale;
+                const height = state.images.topMostCustom.height * scale;
+                tempCtx.drawImage(state.images.topMostCustom, x, y, width, height);
+            }
+            
+            // Рисуем иконку (поверх всех изображений)
+            if (state.images.icon) {
+                tempCtx.drawImage(state.images.icon, 0, 0, tempCanvas.width, tempCanvas.height);
+            }
+            
+            // Применяем маску ко всему нарисованному содержимому
+            const resultCanvas = document.createElement('canvas');
+            resultCanvas.width = canvas.width;
+            resultCanvas.height = canvas.height;
+            const resultCtx = resultCanvas.getContext('2d');
+            
+            // Рисуем маску
+            resultCtx.drawImage(maskCanvas, 0, 0);
+            
+            // Применяем режим маскирования
+            resultCtx.globalCompositeOperation = 'source-in';
+            
+            // Рисуем все слои через маску
+            resultCtx.drawImage(tempCanvas, 0, 0);
+            
+            // Выводим результат на основной холст
+            ctx.drawImage(resultCanvas, 0, 0);
+            
+            // Если у нас есть активное изображение под курсором, рисуем рамку вокруг него
+            if (state.activeHoverImage) {
+                let imageObj, imageState;
+                
+                if (state.activeHoverImage === 'top' && state.images.topCustom) {
+                    imageObj = state.images.topCustom;
+                    imageState = state.topCustomImage;
+                } else if (state.activeHoverImage === 'bottom' && state.images.bottomCustom) {
+                    imageObj = state.images.bottomCustom;
+                    imageState = state.bottomCustomImage;
+                } else if (state.activeHoverImage === 'topmost' && state.images.topMostCustom) {
+                    imageObj = state.images.topMostCustom;
+                    imageState = state.topMostCustomImage;
+                } else {
+                    return; // Если изображение не найдено, выходим
+                }
+                
+                const { x, y, scale } = imageState;
+                const width = imageObj.width * scale;
+                const height = imageObj.height * scale;
+                
+                // Рисуем рамку с цветом, зависящим от типа изображения
+                if (state.activeHoverImage === 'top') {
+                    ctx.strokeStyle = '#db4437'; // Красный для логотипа
+                } else if (state.activeHoverImage === 'bottom') {
+                    ctx.strokeStyle = '#0f9d58'; // Зеленый для фона
+                } else if (state.activeHoverImage === 'topmost') {
+                    ctx.strokeStyle = '#f4b400'; // Желтый для верхнего слоя
+                }
+                
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(x, y, width, height);
+                ctx.setLineDash([]);
+            }
+        }
+
+        async function init() {
+            try {
+                state.images.background = await loadImage('./img/Bgiconsize.png');
+                state.images.topLayer = await loadImage('./img/Toplayer.png');
+                await updateIcon(state.selectedIcon);
+                drawCanvas();
+            } catch (error) {
+                console.error('Ошибка при загрузке изображений:', error);
+                alert('Не удалось загрузить изображения. Проверьте, что все файлы находятся в правильных папках.');
+            }
+        }
+
+        async function updateIcon(iconType) {
+            try {
+                if (iconType === 'none') {
+                    state.images.icon = null;
+                    drawCanvas();
+                } else {
+                    state.images.icon = await loadImage(`./img/${iconType}.png`);
+                    drawCanvas();
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке иконки:', error);
+            }
+        }
+
+        iconSelect.addEventListener('change', (e) => {
+            state.selectedIcon = e.target.value;
+            updateIcon(state.selectedIcon);
+        });
+
+        uploadBtn1.addEventListener('click', () => {
+            imageUpload1.click();
+        });
+
+        uploadBtn2.addEventListener('click', () => {
+            imageUpload2.click();
+        });
+
+        uploadBtn3.addEventListener('click', () => {
+            imageUpload3.click();
+        });
+
+        imageUpload1.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxWidth = 600;
+                        const maxHeight = 900;
+                        const scale = Math.min(maxWidth / img.width, maxHeight / img.height) * 0.8;
+                        
+                        state.images.bottomCustom = img;
+                        
+                        state.bottomCustomImage = {
+                            x: (canvas.width - img.width * scale) / 2,
+                            y: (canvas.height - img.height * scale) / 2,
+                            scale: scale,
+                            isDragging: false,
+                            lastX: 0,
+                            lastY: 0
+                        };
+                        
+                        drawCanvas();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        imageUpload2.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // Максимальный размер 600×145 для второго изображения
+                        const maxWidth = 600;
+                        const maxHeight = 145;
+                        const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                        
+                        state.images.topCustom = img;
+                        
+                        // Центрирование в области 500x145 в центре холста
+                        const upperBound = (canvas.height - 145) / 2;
+                        state.topCustomImage = {
+                            x: (canvas.width - img.width * scale) / 2, // Центрирование по горизонтали
+                            y: upperBound + (145 - img.height * scale) / 2 + 223, // Спускаем на 223px ниже центра
+                            scale: scale,
+                            isDragging: false,
+                            lastX: 0,
+                            lastY: 0
+                        };
+                        
+                        drawCanvas();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        imageUpload3.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxWidth = 600;
+                        const maxHeight = 900;
+                        const scale = Math.min(maxWidth / img.width, maxHeight / img.height) * 0.8;
+                        
+                        state.images.topMostCustom = img;
+                        
+                        state.topMostCustomImage = {
+                            x: (canvas.width - img.width * scale) / 2,
+                            y: (canvas.height - img.height * scale) / 2,
+                            scale: scale,
+                            isDragging: false,
+                            lastX: 0,
+                            lastY: 0
+                        };
+                        
+                        drawCanvas();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Проверяем, на каком изображении произошел клик
+        function checkImageClick(x, y) {
+            // Проверяем сначала самое верхнее изображение (чтобы его можно было перетаскивать поверх других)
+            if (state.images.topMostCustom) {
+                const { x: imgX, y: imgY, scale } = state.topMostCustomImage;
+                const imgWidth = state.images.topMostCustom.width * scale;
+                const imgHeight = state.images.topMostCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    state.activeDragImage = 'topmost';
+                    state.topMostCustomImage.isDragging = true;
+                    return true;
+                }
+            }
+            
+            // Затем проверяем верхнее изображение (второе загруженное)
+            if (state.images.topCustom) {
+                const { x: imgX, y: imgY, scale } = state.topCustomImage;
+                const imgWidth = state.images.topCustom.width * scale;
+                const imgHeight = state.images.topCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    state.activeDragImage = 'top';
+                    state.topCustomImage.isDragging = true;
+                    return true;
+                }
+            }
+            
+            // Проверяем нижнее изображение (первое загруженное)
+            if (state.images.bottomCustom) {
+                const { x: imgX, y: imgY, scale } = state.bottomCustomImage;
+                const imgWidth = state.images.bottomCustom.width * scale;
+                const imgHeight = state.images.bottomCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    state.activeDragImage = 'bottom';
+                    state.bottomCustomImage.isDragging = true;
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // Проверяем, находится ли курсор над изображением
+        function checkImageHover(x, y) {
+            // Сбрасываем текущее активное изображение
+            let prevActiveImage = state.activeHoverImage;
+            state.activeHoverImage = null;
+            
+            // Проверяем верхнее изображение
+            if (state.images.topCustom) {
+                const { x: imgX, y: imgY, scale } = state.topCustomImage;
+                const imgWidth = state.images.topCustom.width * scale;
+                const imgHeight = state.images.topCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    state.activeHoverImage = 'top';
+                    if (prevActiveImage !== 'top') {
+                        drawCanvas(); // Перерисовываем только если изменилось активное изображение
+                    }
+                    return true;
+                }
+            }
+            
+            // Проверяем нижнее изображение
+            if (state.images.bottomCustom) {
+                const { x: imgX, y: imgY, scale } = state.bottomCustomImage;
+                const imgWidth = state.images.bottomCustom.width * scale;
+                const imgHeight = state.images.bottomCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    state.activeHoverImage = 'bottom';
+                    if (prevActiveImage !== 'bottom') {
+                        drawCanvas(); // Перерисовываем только если изменилось активное изображение
+                    }
+                    return true;
+                }
+            }
+            
+            // Если активное изображение изменилось, перерисовываем
+            if (prevActiveImage !== null) {
+                drawCanvas();
+            }
+            
+            return false;
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Сохраняем начальную позицию для всех изображений
+            if (state.images.topCustom) {
+                state.topCustomImage.lastX = x;
+                state.topCustomImage.lastY = y;
+            }
+            if (state.images.bottomCustom) {
+                state.bottomCustomImage.lastX = x;
+                state.bottomCustomImage.lastY = y;
+            }
+            if (state.images.topMostCustom) {
+                state.topMostCustomImage.lastX = x;
+                state.topMostCustomImage.lastY = y;
+            }
+            
+            checkImageClick(x, y);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Проверяем наведение, если не перетаскиваем
+            if (!state.activeDragImage) {
+                checkImageHover(x, y);
+            }
+            
+            // Обработка перетаскивания
+            if (state.activeDragImage === 'top' && state.topCustomImage.isDragging) {
+                const dx = x - state.topCustomImage.lastX;
+                const dy = y - state.topCustomImage.lastY;
+                
+                // Рассчитываем новые координаты
+                let newX = state.topCustomImage.x + dx;
+                let newY = state.topCustomImage.y + dy; // Разрешаем свободное перемещение по вертикали
+                
+                // Получаем размеры изображения в текущем масштабе
+                const width = state.images.topCustom.width * state.topCustomImage.scale;
+                const height = state.images.topCustom.height * state.topCustomImage.scale;
+                
+                // Ограничиваем горизонтальное перемещение, чтобы не выходить за пределы с учетом отступов
+                newX = Math.max(0, Math.min(newX, canvas.width - width));
+                
+                // Ограничиваем вертикальное перемещение в пределах области 600x145 с учетом смещения на 223px вниз
+                const upperBound = (canvas.height - 145) / 2 + 223;
+                const lowerBound = upperBound + 145 - height;
+                newY = Math.max(upperBound, Math.min(newY, lowerBound));
+                
+                // Применяем новые координаты
+                state.topCustomImage.x = newX;
+                state.topCustomImage.y = newY;
+                state.topCustomImage.lastX = x;
+                state.topCustomImage.lastY = y;
+                
+                drawCanvas();
+            } else if (state.activeDragImage === 'bottom' && state.bottomCustomImage.isDragging) {
+                const dx = x - state.bottomCustomImage.lastX;
+                const dy = y - state.bottomCustomImage.lastY;
+                
+                state.bottomCustomImage.x += dx;
+                state.bottomCustomImage.y += dy;
+                state.bottomCustomImage.lastX = x;
+                state.bottomCustomImage.lastY = y;
+                
+                drawCanvas();
+            } else if (state.activeDragImage === 'topmost' && state.topMostCustomImage.isDragging) {
+                const dx = x - state.topMostCustomImage.lastX;
+                const dy = y - state.topMostCustomImage.lastY;
+                
+                state.topMostCustomImage.x += dx;
+                state.topMostCustomImage.y += dy;
+                state.topMostCustomImage.lastX = x;
+                state.topMostCustomImage.lastY = y;
+                
+                drawCanvas();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (state.activeDragImage === 'top') {
+                state.topCustomImage.isDragging = false;
+            } else if (state.activeDragImage === 'bottom') {
+                state.bottomCustomImage.isDragging = false;
+            }
+            state.activeDragImage = null;
+
+            if (state.activeDragImage === 'top') {
+                state.topCustomImage.isDragging = false;
+            } else if (state.activeDragImage === 'bottom') {
+                state.bottomCustomImage.isDragging = false;
+            } else if (state.activeDragImage === 'topmost') {
+                state.topMostCustomImage.isDragging = false;
+            }
+            state.activeDragImage = null;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            if (state.activeDragImage === 'top') {
+                state.topCustomImage.isDragging = false;
+            } else if (state.activeDragImage === 'bottom') {
+                state.bottomCustomImage.isDragging = false;
+            }
+            state.activeDragImage = null;
+            state.activeHoverImage = null;
+            drawCanvas();
+        });
+        
+        // Обработка изменения размера с помощью колесика мыши
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault(); // Предотвращаем прокрутку страницы
+            
+            // Проверяем, находится ли курсор над изображением
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Определяем скорость масштабирования
+            const scaleFactor = e.shiftKey ? 0.01 : 0.05; // Точное масштабирование с Shift
+            
+            // Получаем направление прокрутки (вверх или вниз)
+            const delta = e.deltaY < 0 ? 1 : -1;
+            
+            // Сначала проверяем верхнее изображение
+            if (state.images.topCustom) {
+                const { x: imgX, y: imgY, scale } = state.topCustomImage;
+                const imgWidth = state.images.topCustom.width * scale;
+                const imgHeight = state.images.topCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    // Вычисляем новый масштаб
+                    let newScale = scale + delta * scaleFactor;
+                    
+                    // Устанавливаем минимальный и максимальный масштаб
+                    newScale = Math.max(0.1, Math.min(newScale, 3.0));
+                    
+                    // Вычисляем новые размеры
+                    const newWidth = state.images.topCustom.width * newScale;
+                    const newHeight = state.images.topCustom.height * newScale;
+                    
+                    // Вычисляем новую горизонтальную позицию относительно курсора
+                    const relativeX = (x - imgX) / imgWidth;
+                    const relativeY = (y - imgY) / imgHeight;
+                    let newX = x - relativeX * newWidth;
+                    let newY = y - relativeY * newHeight;
+                    
+                    // Ограничиваем горизонтальное положение, чтобы не выходить за пределы
+                    newX = Math.max(0, Math.min(newX, canvas.width - newWidth));
+                    
+                    // Ограничиваем вертикальное перемещение в пределах области 600x145 с учетом смещения на 223px вниз
+                    const upperBound = (canvas.height - 145) / 2 + 223;
+                    const lowerBound = upperBound + 145 - newHeight;
+                    newY = Math.max(upperBound, Math.min(newY, lowerBound));
+                    
+                    // Обновляем состояние
+                    state.topCustomImage.scale = newScale;
+                    state.topCustomImage.x = newX;
+                    state.topCustomImage.y = newY;
+                    
+                    drawCanvas();
+                    return;
+                }
+            }
+            
+            // Затем проверяем нижнее изображение
+            if (state.images.bottomCustom) {
+                const { x: imgX, y: imgY, scale } = state.bottomCustomImage;
+                const imgWidth = state.images.bottomCustom.width * scale;
+                const imgHeight = state.images.bottomCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    // Вычисляем новый масштаб
+                    let newScale = scale + delta * scaleFactor;
+                    
+                    // Устанавливаем минимальный и максимальный масштаб
+                    newScale = Math.max(0.1, Math.min(newScale, 3.0));
+                    
+                    // Вычисляем новые размеры
+                    const newWidth = state.images.bottomCustom.width * newScale;
+                    const newHeight = state.images.bottomCustom.height * newScale;
+                    
+                    // Вычисляем новую позицию, чтобы масштабировать относительно центра
+                    const relativeX = (x - imgX) / imgWidth;
+                    const relativeY = (y - imgY) / imgHeight;
+                    
+                    const newX = x - relativeX * newWidth;
+                    const newY = y - relativeY * newHeight;
+                    
+                    // Обновляем состояние
+                    state.bottomCustomImage.scale = newScale;
+                    state.bottomCustomImage.x = newX;
+                    state.bottomCustomImage.y = newY;
+                    
+                    drawCanvas();
+                    return;
+                }
+            }
+            
+            // Затем проверяем верхнее изображение (третье загруженное)
+            if (state.images.topMostCustom) {
+                const { x: imgX, y: imgY, scale } = state.topMostCustomImage;
+                const imgWidth = state.images.topMostCustom.width * scale;
+                const imgHeight = state.images.topMostCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    // Вычисляем новый масштаб
+                    let newScale = scale + delta * scaleFactor;
+                    
+                    // Устанавливаем минимальный и максимальный масштаб
+                    newScale = Math.max(0.1, Math.min(newScale, 3.0));
+                    
+                    // Вычисляем новые размеры
+                    const newWidth = state.images.topMostCustom.width * newScale;
+                    const newHeight = state.images.topMostCustom.height * newScale;
+                    
+                    // Вычисляем новую позицию, чтобы масштабировать относительно центра
+                    const relativeX = (x - imgX) / imgWidth;
+                    const relativeY = (y - imgY) / imgHeight;
+                    
+                    const newX = x - relativeX * newWidth;
+                    const newY = y - relativeY * newHeight;
+                    
+                    // Обновляем состояние
+                    state.topMostCustomImage.scale = newScale;
+                    state.topMostCustomImage.x = newX;
+                    state.topMostCustomImage.y = newY;
+                    
+                    drawCanvas();
+                    return;
+                }
+            }
+            
+            // Затем проверяем нижнее изображение
+            if (state.images.bottomCustom) {
+                const { x: imgX, y: imgY, scale } = state.bottomCustomImage;
+                const imgWidth = state.images.bottomCustom.width * scale;
+                const imgHeight = state.images.bottomCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    // Вычисляем новый масштаб
+                    let newScale = scale + delta * scaleFactor;
+                    
+                    // Устанавливаем минимальный и максимальный масштаб
+                    newScale = Math.max(0.1, Math.min(newScale, 3.0));
+                    
+                    // Вычисляем новые размеры
+                    const newWidth = state.images.bottomCustom.width * newScale;
+                    const newHeight = state.images.bottomCustom.height * newScale;
+                    
+                    // Вычисляем новую позицию, чтобы масштабировать относительно центра
+                    const relativeX = (x - imgX) / imgWidth;
+                    const relativeY = (y - imgY) / imgHeight;
+                    
+                    const newX = x - relativeX * newWidth;
+                    const newY = y - relativeY * newHeight;
+                    
+                    // Обновляем состояние
+                    state.bottomCustomImage.scale = newScale;
+                    state.bottomCustomImage.x = newX;
+                    state.bottomCustomImage.y = newY;
+                    
+                    drawCanvas();
+                    return;
+                }
+            }
+        });
+
+        const saveManual = document.getElementById('saveManual');
+        const saveBlobUrl = document.getElementById('saveBlobUrl');
+        const saveDataUrl = document.getElementById('saveDataUrl');
+
+        // Функция для отображения модального окна с инструкциями
+        function showSaveInstructionsModal() {
+            try {
+                // Временно скрываем выделение для лучшего внешнего вида
+                const prevActiveHover = state.activeHoverImage;
+                state.activeHoverImage = null;
+                drawCanvas();
+                
+                // Создаем модальное окно с инструкциями в стиле Bootstrap
+                const modalHtml = `
+                    <div class="modal fade" id="saveInstructionsModal" tabindex="-1" aria-labelledby="saveInstructionsModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="saveInstructionsModalLabel">Сохранение изображения</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Из-за ограничений безопасности браузера невозможно автоматически сохранить изображение.</p>
+                                    <p>Пожалуйста, используйте один из следующих способов:</p>
+                                    <ol class="mb-3">
+                                        <li>Нажмите правую кнопку мыши на изображении и выберите "Сохранить изображение как..."</li>
+                                        <li>Используйте сочетание клавиш для снимка экрана:
+                                            <ul>
+                                                <li>Windows: Win+Shift+S или PrtScn</li>
+                                                <li>Mac: Command+Shift+4</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                    <p class="alert alert-info mb-0">Примечание: При использовании кнопок "PNG (метод 1)" и "PNG (метод 2)" изображение автоматически сжимается до размера не более 250KB в формате PNG.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Закрыть</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Добавляем модальное окно в документ
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                // Создаем экземпляр модального окна
+                const modalElement = document.getElementById('saveInstructionsModal');
+                const modal = new bootstrap.Modal(modalElement);
+                
+                // Показываем модальное окно
+                modal.show();
+                
+                // Обработчик закрытия модального окна
+                modalElement.addEventListener('hidden.bs.modal', () => {
+                    // Удаляем модальное окно из DOM после закрытия
+                    document.body.removeChild(modalElement);
+                    
+                    // Восстанавливаем состояние выделения
+                    state.activeHoverImage = prevActiveHover;
+                    drawCanvas();
+                });
+                
+            } catch (error) {
+                console.error('Ошибка при создании модального окна:', error);
+                alert('Не удалось создать окно с инструкциями. Пожалуйста, сохраните изображение через контекстное меню (правая кнопка мыши → Сохранить изображение как...)');
+                
+                // Восстанавливаем состояние выделения
+                state.activeHoverImage = prevActiveHover;
+                drawCanvas();
+            }
+        }
+
+        // Функция для сжатия изображения до максимального размера (в байтах)
+        function compressCanvasImage(maxSizeBytes = 250 * 1024) {
+            return new Promise((resolve, reject) => {
+                let quality = 1.0; // Начальное качество для PNG
+                const minQuality = 0.1; // Минимальное допустимое качество
+                const step = 0.05; // Шаг уменьшения качества
+                
+                function tryCompress() {
+                    // Получаем Data URL с текущим качеством
+                    const dataUrl = canvas.toDataURL('image/png', quality);
+                    
+                    // Вычисляем размер в байтах (приблизительно)
+                    // base64 использует 4 символа для представления 3 байт данных
+                    // Размер data URL равен строка минус заголовок, умноженное на 0.75
+                    const sizeInBytes = Math.round((dataUrl.length - 'data:image/png;base64,'.length) * 0.75);
+                    
+                    if (sizeInBytes <= maxSizeBytes || quality <= minQuality) {
+                        // Достигли нужного размера или минимального качества
+                        console.log(`Сжатие завершено. Размер: ${Math.round(sizeInBytes / 1024)}KB, качество: ${quality}`);
+                        resolve({ dataUrl, sizeInBytes });
+                    } else {
+                        // Уменьшаем качество и пробуем еще раз
+                        quality -= step;
+                        setTimeout(tryCompress, 0); // Используем setTimeout для предотвращения блокировки UI
+                    }
+                }
+                
+                // Временно скрываем выделение для лучшего внешнего вида
+                const prevActiveHover = state.activeHoverImage;
+                state.activeHoverImage = null;
+                drawCanvas();
+                
+                // Начинаем процесс сжатия
+                tryCompress();
+                
+                // Восстанавливаем состояние выделения после завершения
+                setTimeout(() => {
+                    state.activeHoverImage = prevActiveHover;
+                    drawCanvas();
+                }, 100);
+            });
+        }
+
+        // Функция для сохранения через Blob и URL.createObjectURL
+        function saveThroughBlobUrl() {
+            try {
+                // Сжимаем изображение до 250KB
+                compressCanvasImage().then(({ dataUrl }) => {
+                    // Конвертируем Data URL в Blob
+                    const byteString = atob(dataUrl.split(',')[1]);
+                    const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    
+                    const blob = new Blob([ab], { type: mimeString });
+                    
+                    // Создаем URL объект
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Создаем ссылку для скачивания
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'game_cover.png';
+                    
+                    // Добавляем ссылку в документ, кликаем по ней и удаляем
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Освобождаем URL
+                    setTimeout(() => {
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                }).catch(error => {
+                    throw error;
+                });
+            } catch (error) {
+                console.error('Ошибка при сохранении через Blob:', error);
+                
+                if (error.name === 'SecurityError') {
+                    alert('Ошибка безопасности: невозможно экспортировать canvas с загруженными локальными изображениями.\n\nЭто ограничение безопасности браузера. Пожалуйста, используйте функцию "Сохр. вручную" и сохраните изображение через контекстное меню браузера.');
+                } else {
+                    alert(`Не удалось сохранить через Blob: ${error.message}\nПожалуйста, используйте другой метод сохранения.`);
+                }
+            }
+        }
+
+        // Функция для сохранения через Data URL
+        function saveThroughDataUrl() {
+            try {
+                // Сжимаем изображение до 250KB
+                compressCanvasImage().then(({ dataUrl }) => {
+                    // Создаем ссылку для скачивания
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = 'game_cover.png';
+                    
+                    // Добавляем ссылку в документ, кликаем по ней и удаляем
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }).catch(error => {
+                    throw error;
+                });
+            } catch (error) {
+                console.error('Ошибка при сохранении через Data URL:', error);
+                
+                if (error.name === 'SecurityError') {
+                    alert('Ошибка безопасности: невозможно экспортировать canvas с загруженными локальными изображениями.\n\nЭто ограничение безопасности браузера. Пожалуйста, используйте функцию "Сохр. вручную" и сохраните изображение через контекстное меню браузера.');
+                } else {
+                    alert(`Не удалось сохранить через Data URL: ${error.message}\nПожалуйста, используйте другой метод сохранения.`);
+                }
+            }
+        }
+
+        // Добавляем обработчики событий для кнопок
+        saveManual.addEventListener('click', showSaveInstructionsModal);
+        saveBlobUrl.addEventListener('click', saveThroughBlobUrl);
+        saveDataUrl.addEventListener('click', saveThroughDataUrl);
+
+        // Добавляем обработчики событий для кнопок позиционирования логотипа
+        const logoCenter = document.getElementById('logo-center');
+        
+        // Центрирование логотипа
+        logoCenter.addEventListener('click', () => {
+            if (state.images.topCustom) {
+                // Центрирование в области 500x145 в центре холста
+                const scale = state.topCustomImage.scale;
+                const width = state.images.topCustom.width * scale;
+                const height = state.images.topCustom.height * scale;
+                
+                // Вычисляем границы области 500x145
+                const upperBound = (canvas.height - 145) / 2;
+                
+                // Центрирование логотипа по горизонтали и вертикали в пределах области
+                state.topCustomImage.x = (canvas.width - width) / 2;
+                state.topCustomImage.y = upperBound + (145 - height) / 2 + 223; // Спускаем на 223px ниже центра
+                
+                drawCanvas();
+            }
+        });
+
+        // Рекомендуемый размер логотипа
+        const logoRecommendedSize = document.getElementById('logo-recommended-size');
+        logoRecommendedSize.addEventListener('click', () => {
+            if (state.images.topCustom) {
+                // Устанавливаем рекомендуемый размер (500x145)
+                const recommendedWidth = 500;
+                const recommendedHeight = 145;
+                
+                // Вычисляем масштаб для достижения рекомендуемого размера
+                const originalWidth = state.images.topCustom.width;
+                const originalHeight = state.images.topCustom.height;
+                
+                // Выбираем масштаб, который обеспечит не превышение обоих рекомендуемых размеров
+                const scale = Math.min(recommendedWidth / originalWidth, recommendedHeight / originalHeight);
+                
+                // Обновляем масштаб
+                state.topCustomImage.scale = scale;
+                
+                // Центрируем в области
+                const width = originalWidth * scale;
+                const height = originalHeight * scale;
+                
+                // Вычисляем границы области
+                const upperBound = (canvas.height - 145) / 2;
+                
+                // Центрирование логотипа по горизонтали и вертикали в пределах области
+                state.topCustomImage.x = (canvas.width - width) / 2;
+                state.topCustomImage.y = upperBound + (145 - height) / 2 + 223; // Спускаем на 223px ниже центра
+                
+                drawCanvas();
+            }
+        });
+
+        // Добавляем обработчик клавиатуры для перемещения логотипа стрелками
+        document.addEventListener('keydown', (e) => {
+            // Проверяем, что загружен логотип
+            if (!state.images.topCustom) return;
+            
+            // Определяем размер шага: 1px с Shift, 5px без Shift
+            const step = e.shiftKey ? 1 : 5;
+            
+            // Определяем, какая стрелка была нажата
+            switch (e.key) {
+                case 'ArrowLeft':
+                    // Перемещаем логотип влево
+                    moveLogoHorizontal(-step);
+                    e.preventDefault(); // Предотвращаем скроллинг страницы
+                    break;
+                case 'ArrowRight':
+                    // Перемещаем логотип вправо
+                    moveLogoHorizontal(step);
+                    e.preventDefault();
+                    break;
+                case 'ArrowUp':
+                    // Перемещаем логотип вверх
+                    moveLogoVertical(-step);
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    // Перемещаем логотип вниз
+                    moveLogoVertical(step);
+                    e.preventDefault();
+                    break;
+            }
+        });
+        
+        // Функция для горизонтального перемещения логотипа
+        function moveLogoHorizontal(step) {
+            // Получаем текущие параметры логотипа
+            const { scale } = state.topCustomImage;
+            const width = state.images.topCustom.width * scale;
+            
+            // Рассчитываем новую позицию
+            let newX = state.topCustomImage.x + step;
+            
+            // Ограничиваем горизонтальное перемещение
+            newX = Math.max(0, Math.min(newX, canvas.width - width));
+            
+            // Применяем новую позицию
+            state.topCustomImage.x = newX;
+            
+            // Обновляем canvas
+            drawCanvas();
+        }
+        
+        // Функция для вертикального перемещения логотипа
+        function moveLogoVertical(step) {
+            // Получаем текущие параметры логотипа
+            const { scale } = state.topCustomImage;
+            const height = state.images.topCustom.height * scale;
+            
+            // Рассчитываем новую позицию
+            let newY = state.topCustomImage.y + step;
+            
+            // Ограничиваем вертикальное перемещение в пределах области
+            const upperBound = (canvas.height - 145) / 2 + 223;
+            const lowerBound = upperBound + 145 - height;
+            newY = Math.max(upperBound, Math.min(newY, lowerBound));
+            
+            // Применяем новую позицию
+            state.topCustomImage.y = newY;
+            
+            // Обновляем canvas
+            drawCanvas();
+        }
+
+        init();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
