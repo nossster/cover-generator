@@ -94,13 +94,12 @@
                 <div class="col-lg-8 col-md-6 mb-2">
                     <div class="btn-group w-100">
                         <button id="saveManual" class="btn btn-sm btn-primary">Сохр. вручную</button>
-                        <button id="saveBlobUrl" class="btn btn-sm btn-danger">Сохр. (метод 1)</button>
-                        <button id="saveDataUrl" class="btn btn-sm btn-warning">Сохр. (метод 2)</button>
+                        <button id="saveBlobUrl" class="btn btn-sm btn-danger">PNG (метод 1)</button>
+                        <button id="saveDataUrl" class="btn btn-sm btn-warning">PNG (метод 2)</button>
                     </div>
                 </div>
             </div>
-        </div>
-        
+            
         <input type="file" id="imageUpload1" accept="image/*" style="display: none;">
         <input type="file" id="imageUpload2" accept="image/*" style="display: none;">
         <input type="file" id="imageUpload3" accept="image/*" style="display: none;">
@@ -109,6 +108,189 @@
             <canvas id="iconCanvas" width="600" height="900"></canvas>
         </div>
 
+            <!-- Общий блок настроек -->
+            <div id="settingsPanel" class="mb-3 mt-4 border rounded p-3 bg-light">
+                <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="filters-tab" data-bs-toggle="tab" data-bs-target="#filters" type="button" role="tab" aria-controls="filters" aria-selected="true">Фильтры</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="logo-tab" data-bs-toggle="tab" data-bs-target="#logo-settings" type="button" role="tab" aria-controls="logo-settings" aria-selected="false">Настройки логотипа</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="topmost-tab" data-bs-toggle="tab" data-bs-target="#topmost-settings" type="button" role="tab" aria-controls="topmost-settings" aria-selected="false">Настройки доп. картинки</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content p-2 mt-2" id="settingsTabContent">
+                    <!-- Фильтры -->
+                    <div class="tab-pane fade show active" id="filters" role="tabpanel" aria-labelledby="filters-tab">
+                        <h6 class="mb-2">Настройка фильтров верхнего слоя</h6>
+                        <div class="row g-2 mb-2">
+                            <div class="col-lg-6 col-md-6 mb-2">
+                                <select id="topLayerColorFilter" class="form-select form-select-sm">
+                                    <option value="none" selected>Без фильтра</option>
+                                    <option value="red">Красный</option>
+                                    <option value="green">Зеленый</option>
+                                    <option value="blue">Синий</option>
+                                    <option value="yellow">Желтый</option>
+                                    <option value="purple">Фиолетовый</option>
+                                    <option value="orange">Оранжевый</option>
+                                    <option value="custom">Свой цвет</option>
+                                </select>
+                            </div>
+                            <div id="customColorContainer" class="col-lg-6 col-md-6 mb-2 d-none">
+                                <input type="color" id="customTopLayerColor" class="form-control form-control-sm" value="#ff0000">
+                            </div>
+                        </div>
+                        
+                        <div id="filterOptionsContainer" class="row g-2 mb-2 d-none">
+                            <div class="col-lg-6 col-md-6 mb-2">
+                                <div class="input-group input-group-sm">
+                                    <label class="input-group-text" for="filterIntensity">Интенсивность</label>
+                                    <input type="range" class="form-range form-control" id="filterIntensity" min="0" max="100" value="70">
+                                    <span class="input-group-text" id="filterIntensityValue">70%</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 mb-2">
+                                <div class="input-group input-group-sm">
+                                    <label class="input-group-text" for="filterBlendMode">Режим наложения</label>
+                                    <select class="form-select" id="filterBlendMode">
+                                        <option value="multiply" selected>Умножение</option>
+                                        <option value="screen">Экран</option>
+                                        <option value="overlay">Перекрытие</option>
+                                        <option value="color">Цвет</option>
+                                        <option value="hue">Оттенок</option>
+                                        <option value="saturation">Насыщенность</option>
+                                        <option value="soft-light">Мягкий свет</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Настройки логотипа -->
+                    <div class="tab-pane fade" id="logo-settings" role="tabpanel" aria-labelledby="logo-tab">
+                        <h6 class="mb-2">Настройки логотипа</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="logoShadowEnabled">
+                            <label class="form-check-label" for="logoShadowEnabled">
+                                Добавить тень (90°, 30% непрозрачность, размер 39px)
+                            </label>
+                        </div>
+                        
+                        <h6 class="mb-2 mt-3">Цвет наложения</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm mb-2">
+                                    <label class="input-group-text" for="logoColorPicker">Цвет</label>
+                                    <input type="color" class="form-control form-control-color w-50" id="logoColorPicker" value="#000000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm mb-2">
+                                    <label class="input-group-text" for="logoColorBlendMode">Режим</label>
+                                    <select class="form-select" id="logoColorBlendMode">
+                                        <option value="normal">Обычный</option>
+                                        <option value="multiply">Умножение</option>
+                                        <option value="screen">Экран</option>
+                                        <option value="overlay">Перекрытие</option>
+                                        <option value="darken">Затемнение</option>
+                                        <option value="lighten">Осветление</option>
+                                        <option value="color-dodge">Осветление основы</option>
+                                        <option value="color-burn">Затемнение основы</option>
+                                        <option value="hard-light">Жесткий свет</option>
+                                        <option value="soft-light">Мягкий свет</option>
+                                        <option value="difference">Разница</option>
+                                        <option value="exclusion">Исключение</option>
+                                        <option value="hue">Оттенок</option>
+                                        <option value="saturation">Насыщенность</option>
+                                        <option value="color">Цвет</option>
+                                        <option value="luminosity">Яркость</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <div class="input-group input-group-sm">
+                                    <label class="input-group-text" for="logoColorIntensity">Интенсивность</label>
+                                    <input type="range" class="form-range form-control" id="logoColorIntensity" min="0" max="100" value="100">
+                                    <span class="input-group-text" id="logoColorIntensityValue">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button id="resetLogoSettings" class="btn btn-sm btn-secondary">Сбросить настройки</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Настройки доп. картинки -->
+                    <div class="tab-pane fade" id="topmost-settings" role="tabpanel" aria-labelledby="topmost-tab">
+                        <h6 class="mb-2">Настройки доп. картинки</h6>
+                        
+                        <!-- Настройки тени -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="topMostShadowEnabled">
+                            <label class="form-check-label" for="topMostShadowEnabled">
+                                Добавить тень (90°, 30% непрозрачность, размер 39px)
+                            </label>
+                        </div>
+                        
+                        <!-- Настройки цвета -->
+                        <h6 class="mb-2 mt-3">Цвет наложения</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm mb-2">
+                                    <label class="input-group-text" for="topMostColorPicker">Цвет</label>
+                                    <input type="color" class="form-control form-control-color w-50" id="topMostColorPicker" value="#000000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm mb-2">
+                                    <label class="input-group-text" for="topMostColorBlendMode">Режим</label>
+                                    <select class="form-select" id="topMostColorBlendMode">
+                                        <option value="normal" selected>Обычный</option>
+                                        <option value="multiply">Умножение</option>
+                                        <option value="screen">Экран</option>
+                                        <option value="overlay">Перекрытие</option>
+                                        <option value="darken">Затемнение</option>
+                                        <option value="lighten">Осветление</option>
+                                        <option value="color-dodge">Осветление основы</option>
+                                        <option value="color-burn">Затемнение основы</option>
+                                        <option value="hard-light">Жесткий свет</option>
+                                        <option value="soft-light">Мягкий свет</option>
+                                        <option value="difference">Разница</option>
+                                        <option value="exclusion">Исключение</option>
+                                        <option value="hue">Оттенок</option>
+                                        <option value="saturation">Насыщенность</option>
+                                        <option value="color">Цвет</option>
+                                        <option value="luminosity">Яркость</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <div class="input-group input-group-sm">
+                                    <label class="input-group-text" for="topMostColorIntensity">Интенсивность</label>
+                                    <input type="range" class="form-range form-control" id="topMostColorIntensity" min="0" max="100" value="100">
+                                    <span class="input-group-text" id="topMostColorIntensityValue">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button id="resetTopMostSettings" class="btn btn-sm btn-secondary">Сбросить настройки</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="help-text mb-3 small">
             <p><strong>Управление:</strong></p>
             <p>• Перетаскивание: выберите и перетащите изображение</p>
@@ -116,6 +298,8 @@
             <p>• Точное изменение размера: прокрутка + Shift для более точного контроля</p>
             <p>• Стрелки: перемещение логотипа на 5px, Shift + стрелки: на 1px</p>
         </div>
+        
+        <!-- Удаляем старые блоки настроек -->
     </div>
 
     <script>
@@ -152,7 +336,8 @@
                 scale: 1,
                 isDragging: false,
                 lastX: 0,
-                lastY: 0
+                lastY: 0,
+                shadowEnabled: false
             },
             topMostCustomImage: {
                 x: 0,
@@ -160,11 +345,32 @@
                 scale: 1,
                 isDragging: false,
                 lastX: 0,
-                lastY: 0
+                lastY: 0,
+                shadowEnabled: false
             },
             activeDragImage: null,
             activeHoverImage: null,
-            selectedIcon: 'none'
+            selectedIcon: 'none',
+            topLayerFilter: {
+                color: 'none',
+                customColor: '#ff0000',
+                intensity: 0.7,
+                blendMode: 'multiply'
+            },
+            logoColorValue: '#000000',
+            logoColorBlendMode: 'normal',
+            logoColorIntensity: 1.0,
+            topMostColorValue: '#000000',
+            topMostColorBlendMode: 'normal',
+            topMostColorIntensity: 1.0,
+            // Новые параметры для прозрачности и наложения
+            logoOpacity: 1.0, // Прозрачность логотипа
+            topImageOpacity: 1.0, // Прозрачность верхнего изображения
+            bottomImageOpacity: 1.0, // Прозрачность нижнего изображения
+            blendMode: 'normal', // Режим наложения для основных изображений
+            selectedFilter: 'none', // Выбранный фильтр
+            filterOpacity: 0.7, // Прозрачность фильтра
+            customColor: '#ff0000' // Пользовательский цвет для фильтра
         };
 
         function loadImage(src) {
@@ -213,28 +419,247 @@
                 const { x, y, scale } = state.bottomCustomImage;
                 const width = state.images.bottomCustom.width * scale;
                 const height = state.images.bottomCustom.height * scale;
+                
+                // Применяем прозрачность, если она задана
+                if (state.bottomImageOpacity !== undefined) {
+                    tempCtx.globalAlpha = state.bottomImageOpacity;
+                }
+                
                 tempCtx.drawImage(state.images.bottomCustom, x, y, width, height);
+                
+                // Восстанавливаем прозрачность
+                tempCtx.globalAlpha = 1.0;
             }
             
-            // Рисуем верхний слой (контур)
+            // Рисуем верхний слой (контур) с применением фильтра если он выбран
             if (state.images.topLayer) {
-                tempCtx.drawImage(state.images.topLayer, 0, 0, tempCanvas.width, tempCanvas.height);
+                // Создаем отдельный canvas для верхнего слоя с фильтром
+                const topLayerCanvas = document.createElement('canvas');
+                topLayerCanvas.width = canvas.width;
+                topLayerCanvas.height = canvas.height;
+                const topLayerCtx = topLayerCanvas.getContext('2d');
+                
+                // Рисуем верхний слой
+                topLayerCtx.drawImage(state.images.topLayer, 0, 0, topLayerCanvas.width, topLayerCanvas.height);
+                
+                // Применяем цветовой фильтр, если он выбран
+                if (state.topLayerFilter.color !== 'none') {
+                    // Используем выбранный режим наложения
+                    topLayerCtx.globalCompositeOperation = state.topLayerFilter.blendMode;
+                    
+                    // Определяем цвет фильтра и его интенсивность
+                    let filterColor;
+                    // Используем заданную пользователем интенсивность
+                    let filterOpacity = state.topLayerFilter.intensity;
+                    
+                    switch (state.topLayerFilter.color) {
+                        case 'red':
+                            filterColor = 'rgba(255, 0, 0, ' + filterOpacity + ')';
+                            break;
+                        case 'green':
+                            filterColor = 'rgba(0, 255, 0, ' + filterOpacity + ')';
+                            break;
+                        case 'blue':
+                            filterColor = 'rgba(0, 0, 255, ' + filterOpacity + ')';
+                            break;
+                        case 'yellow':
+                            filterColor = 'rgba(255, 255, 0, ' + filterOpacity + ')';
+                            break;
+                        case 'purple':
+                            filterColor = 'rgba(128, 0, 128, ' + filterOpacity + ')';
+                            break;
+                        case 'orange':
+                            filterColor = 'rgba(255, 165, 0, ' + filterOpacity + ')';
+                            break;
+                        case 'custom':
+                            // Для пользовательского цвета, преобразуем HEX в RGB с прозрачностью
+                            const hexColor = state.topLayerFilter.customColor;
+                            const r = parseInt(hexColor.slice(1, 3), 16);
+                            const g = parseInt(hexColor.slice(3, 5), 16);
+                            const b = parseInt(hexColor.slice(5, 7), 16);
+                            filterColor = `rgba(${r}, ${g}, ${b}, ${filterOpacity})`;
+                            break;
+                        default:
+                            filterColor = null;
+                    }
+                    
+                    if (filterColor) {
+                        // Применяем цветовой фильтр
+                        topLayerCtx.fillStyle = filterColor;
+                        topLayerCtx.fillRect(0, 0, topLayerCanvas.width, topLayerCanvas.height);
+                        
+                        // После применения цветового фильтра, возвращаем исходную прозрачность (альфа-канал)
+                        topLayerCtx.globalCompositeOperation = 'destination-in';
+                        topLayerCtx.drawImage(state.images.topLayer, 0, 0, topLayerCanvas.width, topLayerCanvas.height);
+                    }
+                }
+                
+                // Рисуем обработанный верхний слой на основной временный холст
+                tempCtx.drawImage(topLayerCanvas, 0, 0);
             }
             
             // Рисуем верхнее пользовательское изображение
             if (state.images.topCustom) {
-                const { x, y, scale } = state.topCustomImage;
+                const { x, y, scale, shadowEnabled } = state.topCustomImage;
                 const width = state.images.topCustom.width * scale;
                 const height = state.images.topCustom.height * scale;
-                tempCtx.drawImage(state.images.topCustom, x, y, width, height);
+                
+                // Создаем отдельный canvas для логотипа с эффектами
+                const logoCanvas = document.createElement('canvas');
+                logoCanvas.width = width + 80; // Добавляем место для тени
+                logoCanvas.height = height + 80;
+                const logoCtx = logoCanvas.getContext('2d');
+                
+                // Подготавливаем изображение с цветовым фильтром, если нужно
+                const processedImage = document.createElement('canvas');
+                processedImage.width = width;
+                processedImage.height = height;
+                const processedCtx = processedImage.getContext('2d');
+                
+                // Применяем прозрачность, если она задана
+                if (state.logoOpacity !== undefined) {
+                    processedCtx.globalAlpha = state.logoOpacity;
+                }
+                
+                // Сначала рисуем оригинальное изображение
+                processedCtx.drawImage(state.images.topCustom, 0, 0, width, height);
+                
+                // Восстанавливаем прозрачность
+                processedCtx.globalAlpha = 1.0;
+                
+                // Применяем цветовой фильтр (наложение), если не normal
+                if (state.logoColorBlendMode !== 'normal') {
+                    // Создаем временный canvas для цвета
+                    const colorCanvas = document.createElement('canvas');
+                    colorCanvas.width = width;
+                    colorCanvas.height = height;
+                    const colorCtx = colorCanvas.getContext('2d');
+                    
+                    // Рисуем оригинальное изображение для получения маски
+                    colorCtx.drawImage(state.images.topCustom, 0, 0, width, height);
+                    
+                    // Применяем выбранный цвет только к непрозрачным пикселям
+                    colorCtx.globalCompositeOperation = 'source-in';
+                    
+                    // Анализируем цвет и корректируем с учетом интенсивности
+                    let color = state.logoColorValue;
+                    
+                    // Если интенсивность меньше 100%, смешиваем с прозрачностью
+                    if (state.logoColorIntensity < 1.0) {
+                        // Преобразуем hex в rgba
+                        const r = parseInt(color.slice(1, 3), 16);
+                        const g = parseInt(color.slice(3, 5), 16);
+                        const b = parseInt(color.slice(5, 7), 16);
+                        color = `rgba(${r}, ${g}, ${b}, ${state.logoColorIntensity})`;
+                    }
+                    
+                    colorCtx.fillStyle = color;
+                    colorCtx.fillRect(0, 0, width, height);
+                    
+                    // Накладываем цвет на оригинал с выбранным режимом смешивания
+                    processedCtx.globalCompositeOperation = state.logoColorBlendMode;
+                    processedCtx.drawImage(colorCanvas, 0, 0);
+                }
+                
+                // Если тень включена, применяем её
+                if (shadowEnabled) {
+                    // Настраиваем тень
+                    logoCtx.shadowColor = 'rgba(0, 0, 0, 0.3)'; // Черный с непрозрачностью 30%
+                    logoCtx.shadowBlur = 39; // Размер тени 39px
+                    logoCtx.shadowOffsetX = 0; // Смещение по X (0 для угла 90 градусов)
+                    logoCtx.shadowOffsetY = 0; // Смещение по Y (0 для угла 90 градусов)
+                    
+                    // Рисуем обработанное изображение с тенью в центре логотипа canvas
+                    logoCtx.drawImage(processedImage, 40, 40);
+                } else {
+                    // Рисуем без тени
+                    logoCtx.drawImage(processedImage, 40, 40);
+                }
+                
+                // Рисуем canvas с логотипом и эффектами на основной холст
+                tempCtx.drawImage(logoCanvas, x - 40, y - 40);
             }
             
             // Рисуем самое верхнее пользовательское изображение
             if (state.images.topMostCustom) {
-                const { x, y, scale } = state.topMostCustomImage;
+                const { x, y, scale, shadowEnabled } = state.topMostCustomImage;
                 const width = state.images.topMostCustom.width * scale;
                 const height = state.images.topMostCustom.height * scale;
-                tempCtx.drawImage(state.images.topMostCustom, x, y, width, height);
+                
+                // Создаем отдельный canvas для доп. картинки с эффектами
+                const topMostCanvas = document.createElement('canvas');
+                topMostCanvas.width = width + 80; // Добавляем место для тени
+                topMostCanvas.height = height + 80;
+                const topMostCtx = topMostCanvas.getContext('2d');
+                
+                // Подготавливаем изображение с цветовым фильтром, если нужно
+                const processedTopMost = document.createElement('canvas');
+                processedTopMost.width = width;
+                processedTopMost.height = height;
+                const processedTopMostCtx = processedTopMost.getContext('2d');
+                
+                // Применяем прозрачность, если она задана
+                if (state.topImageOpacity !== undefined) {
+                    processedTopMostCtx.globalAlpha = state.topImageOpacity;
+                }
+                
+                // Сначала рисуем оригинальное изображение
+                processedTopMostCtx.drawImage(state.images.topMostCustom, 0, 0, width, height);
+                
+                // Восстанавливаем прозрачность
+                processedTopMostCtx.globalAlpha = 1.0;
+                
+                // Применяем цветовой фильтр (наложение), если не normal
+                if (state.topMostColorBlendMode !== 'normal') {
+                    // Создаем временный canvas для цвета
+                    const colorCanvas = document.createElement('canvas');
+                    colorCanvas.width = width;
+                    colorCanvas.height = height;
+                    const colorCtx = colorCanvas.getContext('2d');
+                    
+                    // Рисуем оригинальное изображение для получения маски
+                    colorCtx.drawImage(state.images.topMostCustom, 0, 0, width, height);
+                    
+                    // Применяем выбранный цвет только к непрозрачным пикселям
+                    colorCtx.globalCompositeOperation = 'source-in';
+                    
+                    // Анализируем цвет и корректируем с учетом интенсивности
+                    let color = state.topMostColorValue;
+                    
+                    // Если интенсивность меньше 100%, смешиваем с прозрачностью
+                    if (state.topMostColorIntensity < 1.0) {
+                        // Преобразуем hex в rgba
+                        const r = parseInt(color.slice(1, 3), 16);
+                        const g = parseInt(color.slice(3, 5), 16);
+                        const b = parseInt(color.slice(5, 7), 16);
+                        color = `rgba(${r}, ${g}, ${b}, ${state.topMostColorIntensity})`;
+                    }
+                    
+                    colorCtx.fillStyle = color;
+                    colorCtx.fillRect(0, 0, width, height);
+                    
+                    // Накладываем цвет на оригинал с выбранным режимом смешивания
+                    processedTopMostCtx.globalCompositeOperation = state.topMostColorBlendMode;
+                    processedTopMostCtx.drawImage(colorCanvas, 0, 0);
+                }
+                
+                // Если тень включена, применяем её
+                if (shadowEnabled) {
+                    // Настраиваем тень
+                    topMostCtx.shadowColor = 'rgba(0, 0, 0, 0.3)'; // Черный с непрозрачностью 30%
+                    topMostCtx.shadowBlur = 39; // Размер тени 39px
+                    topMostCtx.shadowOffsetX = 0; // Смещение по X (0 для угла 90 градусов)
+                    topMostCtx.shadowOffsetY = 0; // Смещение по Y (0 для угла 90 градусов)
+                    
+                    // Рисуем обработанное изображение с тенью в центре canvas
+                    topMostCtx.drawImage(processedTopMost, 40, 40);
+                } else {
+                    // Рисуем без тени
+                    topMostCtx.drawImage(processedTopMost, 40, 40);
+                }
+                
+                // Рисуем canvas с доп. картинкой и эффектами на основной холст
+                tempCtx.drawImage(topMostCanvas, x - 40, y - 40);
             }
             
             // Рисуем иконку (поверх всех изображений)
@@ -334,10 +759,18 @@
 
         uploadBtn2.addEventListener('click', () => {
             imageUpload2.click();
+            
+            // Активируем вкладку настроек логотипа при загрузке логотипа
+            document.getElementById('settingsPanel').classList.remove('d-none');
+            document.getElementById('logo-tab').click();
         });
 
         uploadBtn3.addEventListener('click', () => {
             imageUpload3.click();
+            
+            // Активируем вкладку настроек доп. картинки при загрузке доп. картинки
+            document.getElementById('settingsPanel').classList.remove('d-none');
+            document.getElementById('topmost-tab').click();
         });
 
         imageUpload1.addEventListener('change', (e) => {
@@ -498,7 +931,27 @@
             let prevActiveImage = state.activeHoverImage;
             state.activeHoverImage = null;
             
-            // Проверяем верхнее изображение
+            // Проверяем самое верхнее изображение (третье загруженное)
+            if (state.images.topMostCustom) {
+                const { x: imgX, y: imgY, scale } = state.topMostCustomImage;
+                const imgWidth = state.images.topMostCustom.width * scale;
+                const imgHeight = state.images.topMostCustom.height * scale;
+                
+                if (
+                    x >= imgX && 
+                    x <= imgX + imgWidth && 
+                    y >= imgY && 
+                    y <= imgY + imgHeight
+                ) {
+                    state.activeHoverImage = 'topmost';
+                    if (prevActiveImage !== 'topmost') {
+                        drawCanvas(); // Перерисовываем только если изменилось активное изображение
+                    }
+                    return true;
+                }
+            }
+            
+            // Проверяем верхнее изображение (логотип)
             if (state.images.topCustom) {
                 const { x: imgX, y: imgY, scale } = state.topCustomImage;
                 const imgWidth = state.images.topCustom.width * scale;
@@ -634,13 +1087,6 @@
                 state.topCustomImage.isDragging = false;
             } else if (state.activeDragImage === 'bottom') {
                 state.bottomCustomImage.isDragging = false;
-            }
-            state.activeDragImage = null;
-
-            if (state.activeDragImage === 'top') {
-                state.topCustomImage.isDragging = false;
-            } else if (state.activeDragImage === 'bottom') {
-                state.bottomCustomImage.isDragging = false;
             } else if (state.activeDragImage === 'topmost') {
                 state.topMostCustomImage.isDragging = false;
             }
@@ -652,6 +1098,8 @@
                 state.topCustomImage.isDragging = false;
             } else if (state.activeDragImage === 'bottom') {
                 state.bottomCustomImage.isDragging = false;
+            } else if (state.activeDragImage === 'topmost') {
+                state.topMostCustomImage.isDragging = false;
             }
             state.activeDragImage = null;
             state.activeHoverImage = null;
@@ -1163,6 +1611,235 @@
         }
 
         init();
+        
+        // Обработчики для фильтра цвета верхнего слоя
+        const topLayerColorFilter = document.getElementById('topLayerColorFilter');
+        const customColorContainer = document.getElementById('customColorContainer');
+        const customTopLayerColor = document.getElementById('customTopLayerColor');
+        const filterOptionsContainer = document.getElementById('filterOptionsContainer');
+        const filterIntensity = document.getElementById('filterIntensity');
+        const filterIntensityValue = document.getElementById('filterIntensityValue');
+        const filterBlendMode = document.getElementById('filterBlendMode');
+        
+        topLayerColorFilter.addEventListener('change', (e) => {
+            state.topLayerFilter.color = e.target.value;
+            
+            // Показываем или скрываем селектор пользовательского цвета
+            if (e.target.value === 'custom') {
+                customColorContainer.classList.remove('d-none');
+            } else {
+                customColorContainer.classList.add('d-none');
+            }
+            
+            // Показываем дополнительные настройки фильтра, если выбран фильтр
+            if (e.target.value === 'none') {
+                filterOptionsContainer.classList.add('d-none');
+            } else {
+                filterOptionsContainer.classList.remove('d-none');
+                // Активируем вкладку с фильтрами при выборе фильтра
+                document.getElementById('settingsPanel').classList.remove('d-none');
+                document.getElementById('filters-tab').click();
+            }
+            
+            drawCanvas();
+        });
+        
+        customTopLayerColor.addEventListener('input', (e) => {
+            state.topLayerFilter.customColor = e.target.value;
+            drawCanvas();
+        });
+        
+        filterIntensity.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            state.topLayerFilter.intensity = value / 100;
+            filterIntensityValue.textContent = value + '%';
+            drawCanvas();
+        });
+        
+        filterBlendMode.addEventListener('change', (e) => {
+            state.topLayerFilter.blendMode = e.target.value;
+            drawCanvas();
+        });
+
+        // Обработчик для включения/выключения тени логотипа
+        const logoShadowEnabled = document.getElementById('logoShadowEnabled');
+        logoShadowEnabled.addEventListener('change', (e) => {
+            state.topCustomImage.shadowEnabled = e.target.checked;
+            drawCanvas();
+        });
+
+        // Обработчики для настроек цвета логотипа
+        const logoColorPicker = document.getElementById('logoColorPicker');
+        const logoColorBlendMode = document.getElementById('logoColorBlendMode');
+        const logoColorIntensity = document.getElementById('logoColorIntensity');
+        const logoColorIntensityValue = document.getElementById('logoColorIntensityValue');
+        
+        logoColorPicker.addEventListener('input', (e) => {
+            state.logoColorValue = e.target.value;
+            drawCanvas();
+        });
+        
+        logoColorBlendMode.addEventListener('change', (e) => {
+            state.logoColorBlendMode = e.target.value;
+            drawCanvas();
+        });
+        
+        logoColorIntensity.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            state.logoColorIntensity = value / 100;
+            logoColorIntensityValue.textContent = value + '%';
+            drawCanvas();
+        });
+
+        // Обработчики для настроек доп. картинки
+        const topMostShadowEnabled = document.getElementById('topMostShadowEnabled');
+        const topMostColorPicker = document.getElementById('topMostColorPicker');
+        const topMostColorBlendMode = document.getElementById('topMostColorBlendMode');
+        const topMostColorIntensity = document.getElementById('topMostColorIntensity');
+        const topMostColorIntensityValue = document.getElementById('topMostColorIntensityValue');
+        
+        topMostShadowEnabled.addEventListener('change', (e) => {
+            state.topMostCustomImage.shadowEnabled = e.target.checked;
+            drawCanvas();
+        });
+        
+        topMostColorPicker.addEventListener('input', (e) => {
+            state.topMostColorValue = e.target.value;
+            drawCanvas();
+        });
+        
+        topMostColorBlendMode.addEventListener('change', (e) => {
+            state.topMostColorBlendMode = e.target.value;
+            drawCanvas();
+        });
+        
+        topMostColorIntensity.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            state.topMostColorIntensity = value / 100;
+            topMostColorIntensityValue.textContent = value + '%';
+            drawCanvas();
+        });
+
+        // Сброс настроек логотипа
+        document.getElementById('resetLogoSettings').addEventListener('click', () => {
+            // Сбрасываем значения в состоянии
+            state.topCustomImage.shadowEnabled = false;
+            state.logoColorValue = '#000000';
+            state.logoColorBlendMode = 'normal';
+            state.logoColorIntensity = 1.0;
+            
+            // Обновляем элементы интерфейса
+            logoShadowEnabled.checked = false;
+            logoColorPicker.value = '#000000';
+            logoColorBlendMode.value = 'normal';
+            logoColorIntensity.value = 100;
+            logoColorIntensityValue.textContent = '100%';
+            
+            drawCanvas();
+        });
+        
+        // Сброс настроек дополнительной картинки
+        document.getElementById('resetTopMostSettings').addEventListener('click', () => {
+            // Сбрасываем значения в состоянии
+            state.topMostCustomImage.shadowEnabled = false;
+            state.topMostColorValue = '#000000';
+            state.topMostColorBlendMode = 'normal';
+            state.topMostColorIntensity = 1.0;
+            
+            // Обновляем элементы интерфейса
+            topMostShadowEnabled.checked = false;
+            topMostColorPicker.value = '#000000';
+            topMostColorBlendMode.value = 'normal';
+            topMostColorIntensity.value = 100;
+            topMostColorIntensityValue.textContent = '100%';
+            
+            drawCanvas();
+        });
+
+        // При загрузке страницы
+        window.addEventListener('load', () => {
+            // Настраиваем канвас
+            resizeCanvas();
+            
+            // Скрываем элементы управления до загрузки изображений
+            filterOptionsContainer.classList.add('d-none');
+            customColorContainer.classList.add('d-none');
+            document.getElementById('settingsPanel').classList.add('d-none');
+            
+            drawCanvas();
+        });
+
+        // Функция для обновления состояния и перерисовки канваса
+        function updateParamAndDraw(param, value) {
+            // Обновляем соответствующий параметр в объекте state
+            if (param.includes('.')) {
+                const [obj, prop] = param.split('.');
+                state[obj][prop] = value;
+            } else {
+                state[param] = value;
+            }
+            
+            // Перерисовываем канвас
+            drawCanvas();
+        }
+
+        // Обработчики для слайдеров и настроек изображений
+        document.getElementById('logoOpacity').addEventListener('input', function() {
+            updateParamAndDraw('logoOpacity', this.value / 100);
+            document.getElementById('logoOpacityValue').textContent = this.value + '%';
+        });
+
+        document.getElementById('logoScale').addEventListener('input', function() {
+            const scale = parseFloat(this.value) / 100;
+            updateParamAndDraw('logo.scale', scale);
+            document.getElementById('logoScaleValue').textContent = this.value + '%';
+        });
+
+        document.getElementById('logoShadowOpacity').addEventListener('input', function() {
+            updateParamAndDraw('logoShadowOpacity', this.value / 100);
+            document.getElementById('logoShadowOpacityValue').textContent = this.value + '%';
+        });
+
+        document.getElementById('topImageOpacity').addEventListener('input', function() {
+            updateParamAndDraw('topImageOpacity', this.value / 100);
+            document.getElementById('topImageOpacityValue').textContent = this.value + '%';
+        });
+
+        document.getElementById('blendMode').addEventListener('change', function() {
+            updateParamAndDraw('blendMode', this.value);
+        });
+
+        document.getElementById('filters').addEventListener('change', function() {
+            const selectedFilter = this.value;
+            updateParamAndDraw('selectedFilter', selectedFilter);
+            
+            // Показываем/скрываем селектор цвета в зависимости от выбранного фильтра
+            if (selectedFilter === 'custom') {
+                customColorContainer.classList.remove('d-none');
+                // Активируем вкладку фильтров
+                document.getElementById('filterTabBtn').click();
+            } else {
+                customColorContainer.classList.add('d-none');
+            }
+            
+            // Показываем/скрываем опции фильтра в зависимости от выбранного фильтра
+            if (selectedFilter !== 'none' && selectedFilter !== 'custom') {
+                filterOptionsContainer.classList.remove('d-none');
+                // Активируем вкладку фильтров
+                document.getElementById('filterTabBtn').click();
+            } else {
+                filterOptionsContainer.classList.add('d-none');
+            }
+        });
+
+        document.getElementById('filterOpacity').addEventListener('input', function() {
+            updateParamAndDraw('filterOpacity', this.value / 100);
+            document.getElementById('filterOpacityValue').textContent = this.value + '%';
+        });
+
+        document.getElementById('customColor').addEventListener('input', function() {
+            updateParamAndDraw('customColor', this.value);
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
