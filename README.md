@@ -1,2 +1,2 @@
-# Smartshell-Game-cover
+#Game-cover
 Генератор обложек игр
