@@ -6,4 +6,4 @@ COPY custom/ /usr/share/nginx/html/custom/
 COPY img/ /usr/share/nginx/html/img/
 COPY img2/ /usr/share/nginx/html/img2/
 
-EXPOSE 80
+EXPOSE 8080
