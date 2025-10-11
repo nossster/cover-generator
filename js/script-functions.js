@@ -1,95 +1,80 @@
 // Функция для заполнения выпадающих списков из конфигурации
 function populateSelectOptionsFromConfig() {
     if (!coverSettings) return;
-    
-    // Заполняем список типов обложек
+
     const coverTypeSelect = document.getElementById('coverTypeSelect');
     if (coverTypeSelect) {
-        // Очищаем текущие опции
+        const previousValue = state.coverType ?? coverTypeSelect.value;
         coverTypeSelect.innerHTML = '';
-        
-        // Добавляем опции из конфигурации
         Object.entries(coverSettings.coverTypes).forEach(([typeId, typeData]) => {
             const optionElement = document.createElement('option');
             optionElement.value = typeId;
-            optionElement.textContent = typeData.name || typeId;
-            if (typeId === state.coverType) {
+            optionElement.textContent = getLocalizedValue(typeData.name, typeId);
+            if (typeId === previousValue) {
                 optionElement.selected = true;
             }
             coverTypeSelect.appendChild(optionElement);
         });
     }
-    
-    // Заполняем список фильтров
+
     const topLayerColorFilter = document.getElementById('topLayerColorFilter');
     if (topLayerColorFilter) {
-        // Очищаем текущие опции
+        const selectedFilter = state.topLayerFilter?.color ?? 'none';
         topLayerColorFilter.innerHTML = '';
-        
-        // Добавляем опции из конфигурации
         const filterOptions = coverSettings.defaultSettings.filters.options;
-        filterOptions.forEach(option => {
+        filterOptions.forEach((option) => {
             const optionElement = document.createElement('option');
             optionElement.value = option.id;
-            optionElement.textContent = option.name;
-            if (option.id === 'none') {
+            optionElement.textContent = getLocalizedValue(option.name, option.id);
+            if (option.id === selectedFilter) {
                 optionElement.selected = true;
             }
             topLayerColorFilter.appendChild(optionElement);
         });
     }
-    
-    // Заполняем список режимов смешивания для фильтра
+
     const filterBlendMode = document.getElementById('filterBlendMode');
     if (filterBlendMode) {
-        // Очищаем текущие опции
+        const selectedBlendMode = state.topLayerFilter?.blendMode ?? coverSettings.defaultSettings.filters.defaultBlendMode;
         filterBlendMode.innerHTML = '';
-        
-        // Добавляем опции из конфигурации
         const blendModes = coverSettings.defaultSettings.filters.blendModes;
-        blendModes.forEach(mode => {
+        blendModes.forEach((mode) => {
             const optionElement = document.createElement('option');
             optionElement.value = mode.id;
-            optionElement.textContent = mode.name;
-            if (mode.id === coverSettings.defaultSettings.filters.defaultBlendMode) {
+            optionElement.textContent = getLocalizedValue(mode.name, mode.id);
+            if (mode.id === selectedBlendMode) {
                 optionElement.selected = true;
             }
             filterBlendMode.appendChild(optionElement);
         });
     }
-    
-    // Заполняем список режимов смешивания для логотипа
+
     const logoColorBlendMode = document.getElementById('logoColorBlendMode');
     if (logoColorBlendMode) {
-        // Очищаем текущие опции
+        const selectedLogoBlendMode = state.logoColorBlendMode ?? coverSettings.defaultSettings.logo.defaultBlendMode;
         logoColorBlendMode.innerHTML = '';
-        
-        // Добавляем опции из конфигурации
         const blendModes = coverSettings.defaultSettings.logo.blendModes;
-        blendModes.forEach(mode => {
+        blendModes.forEach((mode) => {
             const optionElement = document.createElement('option');
             optionElement.value = mode.id;
-            optionElement.textContent = mode.name;
-            if (mode.id === coverSettings.defaultSettings.logo.defaultBlendMode) {
+            optionElement.textContent = getLocalizedValue(mode.name, mode.id);
+            if (mode.id === selectedLogoBlendMode) {
                 optionElement.selected = true;
             }
             logoColorBlendMode.appendChild(optionElement);
         });
     }
-    
-    // Заполняем список режимов смешивания для доп. картинки
+
     const topMostColorBlendMode = document.getElementById('topMostColorBlendMode');
     if (topMostColorBlendMode) {
-        // Очищаем текущие опции
+        const selectedTopMostBlend = state.topMostColorBlendMode ?? coverSettings.defaultSettings.logo.defaultBlendMode;
         topMostColorBlendMode.innerHTML = '';
-        
-        // Добавляем опции из конфигурации
         const blendModes = coverSettings.defaultSettings.logo.blendModes;
-        blendModes.forEach(mode => {
+        blendModes.forEach((mode) => {
             const optionElement = document.createElement('option');
             optionElement.value = mode.id;
-            optionElement.textContent = mode.name;
-            if (mode.id === coverSettings.defaultSettings.logo.defaultBlendMode) {
+            optionElement.textContent = getLocalizedValue(mode.name, mode.id);
+            if (mode.id === selectedTopMostBlend) {
                 optionElement.selected = true;
             }
             topMostColorBlendMode.appendChild(optionElement);
@@ -97,6 +82,8 @@ function populateSelectOptionsFromConfig() {
     }
 }
 
+
+window.addEventListener('app:language-changed', populateSelectOptionsFromConfig);
 // Функция для обновления состояния и перерисовки канваса
 function updateParamAndDraw(param, value) {
     // Обновляем соответствующий параметр в объекте state

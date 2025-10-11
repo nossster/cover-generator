@@ -1,5 +1,10 @@
 // Инициализация приложения
 async function init() {
+    const translationsLoaded = await loadTranslations();
+    if (!translationsLoaded) {
+        console.warn('Не удалось загрузить переводы. Используем встроенные значения.');
+    }
+
     // Загружаем настройки из JSON файла
     const settingsLoaded = await loadCoverSettings();
     if (!settingsLoaded) {
@@ -26,6 +31,9 @@ async function init() {
         state.canvasSize.height = defaultHeight;
     }
     
+    setupLanguageSelector();
+    applyTranslations();
+    
     // Настраиваем обработчики событий
     setupEventListeners();
     
@@ -49,6 +57,49 @@ async function init() {
     }
 }
 
+function setupLanguageSelector() {
+    const languageSelect = document.getElementById('languageSelect');
+    if (!languageSelect) {
+        return;
+    }
+
+    const hasLanguages = Array.isArray(availableLanguages) && availableLanguages.length > 0;
+    if (!hasLanguages) {
+        languageSelect.innerHTML = '';
+        languageSelect.disabled = true;
+        return;
+    }
+
+    const renderOptions = () => {
+        languageSelect.innerHTML = '';
+        availableLanguages.forEach((lang) => {
+            const option = document.createElement('option');
+            option.value = lang;
+            option.textContent = translations?.[lang]?.['language.name'] || lang.toUpperCase();
+            if (lang === currentLanguage) {
+                option.selected = true;
+            }
+            languageSelect.appendChild(option);
+        });
+    };
+
+    renderOptions();
+    languageSelect.value = currentLanguage;
+    languageSelect.disabled = false;
+
+    languageSelect.addEventListener('change', (event) => {
+        const chosenLanguage = event.target.value;
+        if (chosenLanguage) {
+            setLanguage(chosenLanguage);
+        }
+    });
+
+    window.addEventListener('app:language-changed', () => {
+        renderOptions();
+        languageSelect.value = currentLanguage;
+    });
+}
+
 // Обработчик события выбора типа обложки
 document.getElementById('coverTypeSelect').addEventListener('change', function() {
     const selectedType = this.value;
@@ -60,8 +111,6 @@ document.getElementById('coverTypeSelect').addEventListener('change', function()
     // Получаем элементы DOM
     const iconSelectContainer = document.getElementById('icon-select-container');
     const customLayersContainer = document.getElementById('custom-layers-container');
-    const bgUploadBtn = document.getElementById('upload-bg-btn');
-    const topLayerUploadBtn = document.getElementById('upload-top-layer-btn');
     const canvasContainer = document.querySelector('.canvas-container');
     
     if (selectedType === 'custom') {
@@ -74,10 +123,6 @@ document.getElementById('coverTypeSelect').addEventListener('change', function()
         iconSelect.value = 'none';
         state.selectedIcon = 'none';
         state.images.icon = null;
-        
-        // Меняем тексты кнопок
-        bgUploadBtn.textContent = 'Загрузить PNG с прозрачностью (маской)';
-        topLayerUploadBtn.textContent = 'Загрузить верхний слой';
         
         // Устанавливаем начальные размеры для полей ввода
         document.getElementById('custom-width').value = state.canvasSize.width;

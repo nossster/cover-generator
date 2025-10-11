@@ -511,3 +511,20 @@ input[type="color"]:focus {
     max-height: 400px;
   }
 }
+
+.language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.language-switcher label {
+    font-weight: 600;
+}
+
+.language-switcher .select-dropdown {
+    width: auto;
+    min-width: 140px;
+}
+

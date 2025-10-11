@@ -18,6 +18,165 @@ const fallbackFilterTemplates = {
     purple: 'rgba(128, 0, 128, $opacity)',
     orange: 'rgba(255, 165, 0, $opacity)'
 };
+let translations = {};
+let availableLanguages = [];
+let currentLanguage = 'ru';
+
+function t(key, fallback = '') {
+    const langPack = translations[currentLanguage];
+    if (langPack && langPack[key]) {
+        return langPack[key];
+    }
+
+    const englishPack = translations.en;
+    if (englishPack && englishPack[key]) {
+        return englishPack[key];
+    }
+
+    for (const lang of availableLanguages) {
+        const pack = translations[lang];
+        if (pack && pack[key]) {
+            return pack[key];
+        }
+    }
+
+    return fallback || '';
+}
+
+function getLocalizedValue(value, fallback = '') {
+    if (!value) {
+        return fallback || '';
+    }
+
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    if (typeof value === 'object') {
+        if (value[currentLanguage]) {
+            return value[currentLanguage];
+        }
+
+        if (value.en) {
+            return value.en;
+        }
+
+        for (const lang of Object.keys(value)) {
+            if (value[lang]) {
+                return value[lang];
+            }
+        }
+    }
+
+    return fallback || '';
+}
+
+function applyTranslations() {
+    if (currentLanguage) {
+        document.documentElement.lang = currentLanguage;
+    }
+
+    const translatedTitle = t('app.title');
+    if (translatedTitle) {
+        document.title = translatedTitle;
+    }
+
+    document.querySelectorAll('[data-i18n]').forEach((element) => {
+        const key = element.getAttribute('data-i18n');
+        if (!key) {
+            return;
+        }
+
+        const target = element.getAttribute('data-i18n-target');
+        const translation = t(key);
+
+        if (!translation) {
+            return;
+        }
+
+        if (target === 'placeholder') {
+            element.setAttribute('placeholder', translation);
+            return;
+        }
+
+        if (target === 'value') {
+            element.value = translation;
+            return;
+        }
+
+        element.textContent = translation;
+    });
+
+    const iconSelect = document.getElementById('iconSelect');
+    if (iconSelect) {
+        const noneOption = iconSelect.querySelector('option[value="none"]');
+        if (noneOption) {
+            noneOption.textContent = t('option.noLogo', noneOption.textContent);
+        }
+    }
+}
+
+function setLanguage(language) {
+    if (!availableLanguages.includes(language)) {
+        return;
+    }
+
+    if (language === currentLanguage) {
+        return;
+    }
+
+    currentLanguage = language;
+    if (typeof state !== 'undefined') {
+        state.language = language;
+    }
+
+    applyTranslations();
+    window.dispatchEvent(new CustomEvent('app:language-changed', { detail: { language } }));
+}
+
+async function loadTranslations() {
+    try {
+        const response = await fetch('config/translations.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        translations = await response.json();
+        availableLanguages = Object.keys(translations);
+
+        const browserLanguage = (navigator.language || navigator.userLanguage || '').split('-')[0];
+        let initialLanguage = currentLanguage;
+
+        if (availableLanguages.includes(browserLanguage)) {
+            initialLanguage = browserLanguage;
+        } else if (!availableLanguages.includes(initialLanguage)) {
+            if (availableLanguages.includes('ru')) {
+                initialLanguage = 'ru';
+            } else if (availableLanguages.includes('en')) {
+                initialLanguage = 'en';
+            } else if (availableLanguages.length > 0) {
+                initialLanguage = availableLanguages[0];
+            }
+        }
+
+        currentLanguage = initialLanguage;
+        if (typeof state !== 'undefined') {
+            state.language = initialLanguage;
+        }
+
+        applyTranslations();
+        window.dispatchEvent(new CustomEvent('app:language-changed', { detail: { language: initialLanguage } }));
+
+        return true;
+    } catch (error) {
+        console.error('Ошибка загрузки переводов:', error);
+        translations = translations || {};
+        availableLanguages = ['ru', 'en'];
+        return false;
+    }
+}
+
+window.setLanguage = setLanguage;
 
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
@@ -120,6 +279,8 @@ let coverSettings = null;
 
 // Объект состояния приложения
 const state = {
+    language: 'ru',
+
     coverType: 'type1', // Тип обложки по умолчанию
     selectedIcon: 'none', // Выбранная иконка
     logoColorValue: '#ffffff', // Цвет логотипа (иконки)
@@ -294,7 +455,7 @@ function drawCanvas() {
             tempCtx.fillStyle = "#888888";
             tempCtx.font = "bold 18px Arial";
             tempCtx.textAlign = "center";
-            tempCtx.fillText("Загрузите фоновое изображение", tempCanvas.width/2, tempCanvas.height/2);
+            tempCtx.fillText(t('canvas.customBackgroundPrompt', 'Upload a background image'), tempCanvas.width / 2, tempCanvas.height / 2);
         }
         
         // Далее код для рисования остается без изменений...

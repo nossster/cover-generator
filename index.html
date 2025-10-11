@@ -12,49 +12,51 @@
         <header class="header">
             <h1 class="header-title">
                 <i class="bi bi-palette header-icon"></i>
-                Генератор обложек игр
+                <span data-i18n="app.heading">Cover Generator</span>
             </h1>
-            <p class="header-subtitle">Создавайте профессиональные обложки для ваших игр</p>
+            <p class="header-subtitle" data-i18n="app.subtitle">Create professional covers for your games.</p>
+            <div class="language-switcher">
+                <label for="languageSelect" data-i18n="label.language">Language</label>
+                <select id="languageSelect" class="select-dropdown"></select>
+            </div>
         </header>
-        
+
         <div class="main-container">
             <aside class="sidebar">
                 <div class="layers-panel">
                     <h2 class="panel-title">
                         <i class="bi bi-layers"></i>
-                        Настройки
+                        <span data-i18n="sidebar.title">Settings</span>
                     </h2>
-                    
-                    <!-- Тип обложки -->
+
                     <div class="layer-card">
                         <div class="layer-header">
-                            <span class="layer-name">Тип обложки</span>
+                            <span class="layer-name" data-i18n="card.coverType">Cover Template</span>
                         </div>
                         <div class="layer-controls">
                             <div class="control-label">
-                                <label for="coverTypeSelect">Выберите тип</label>
+                                <label for="coverTypeSelect" data-i18n="label.coverType">Choose preset</label>
                                 <select id="coverTypeSelect" class="select-dropdown">
-                                    <option value="type1" selected>Обложка тип 1</option>
-                                    <option value="type2">Обложка тип 2</option>
-                                    <option value="custom">Дизайнерский</option>
+                                    <option value="type1">Preset Cover 1</option>
+                                    <option value="type2">Preset Cover 2</option>
+                                    <option value="custom">Custom Cover</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Логотип -->
-                    <div class="layer-card">
+
+                    <div class="layer-card" id="icon-select-container">
                         <div class="layer-header">
-                            <span class="layer-name">Логотип</span>
+                            <span class="layer-name" data-i18n="card.logo">Logo</span>
                         </div>
                         <div class="layer-preview" id="logo-preview">
-                            <div class="layer-empty">Выберите логотип</div>
+                            <div class="layer-empty" data-i18n="placeholder.logoEmpty">Select a logo</div>
                         </div>
                         <div class="layer-controls">
                             <div class="control-label">
-                                <label for="iconSelect">Выберите логотип</label>
+                                <label for="iconSelect" data-i18n="label.iconSelect">Choose logo</label>
                                 <select id="iconSelect" class="select-dropdown">
-                                    <option value="none" selected>Без логотипа</option>
+                                    <option value="none" selected data-i18n="option.noLogo">No logo</option>
                                     <option value="club">Club</option>
                                     <option value="rental">Rental</option>
                                     <option value="steam">Steam</option>
@@ -62,172 +64,157 @@
                                 </select>
                             </div>
                             <div class="control-label">
-                                <button id="uploadBtn2" class="btn btn-secondary">
-                                    <i class="bi bi-upload"></i> Загрузить свой
+                                <button id="uploadBtn2" class="btn btn-secondary" data-i18n="button.logoUpload">
+                                    <i class="bi bi-upload"></i> Upload your own
                                 </button>
                             </div>
                             <div class="control-label">
-                                <button id="logo-center" class="btn btn-primary">Центр</button>
-                                <button id="logo-recommended-size" class="btn btn-primary">Рек. размер</button>
+                                <button id="logo-center" class="btn btn-primary" data-i18n="button.logoCenter">Center</button>
+                                <button id="logo-recommended-size" class="btn btn-primary" data-i18n="button.logoFit">Fit recommended size</button>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Фон -->
+
                     <div class="layer-card">
                         <div class="layer-header">
-                            <span class="layer-name">Фон</span>
+                            <span class="layer-name" data-i18n="card.background">Background</span>
                         </div>
                         <div class="layer-preview" id="background-preview">
-                            <div class="layer-empty">Фоновое изображение</div>
+                            <div class="layer-empty" data-i18n="placeholder.backgroundEmpty">Background image</div>
                         </div>
                         <div class="layer-controls">
                             <div class="control-label">
-                                <button id="uploadBtn1" class="btn btn-success">
-                                    <i class="bi bi-upload"></i> Загрузить фон
+                                <button id="uploadBtn1" class="btn btn-success" data-i18n="button.backgroundUpload">
+                                    <i class="bi bi-upload"></i> Upload background
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Дополнительная картинка -->
+
                     <div class="layer-card">
                         <div class="layer-header">
-                            <span class="layer-name">Доп. картинка</span>
+                            <span class="layer-name" data-i18n="card.topImage">Extra Image</span>
                         </div>
                         <div class="layer-preview" id="topmost-preview">
-                            <div class="layer-empty">Дополнительное изображение</div>
+                            <div class="layer-empty" data-i18n="placeholder.topEmpty">Extra image</div>
                         </div>
                         <div class="layer-controls">
                             <div class="control-label">
-                                <button id="uploadBtn3" class="btn btn-secondary">
-                                    <i class="bi bi-upload"></i> Загрузить
+                                <button id="uploadBtn3" class="btn btn-secondary" data-i18n="button.topUpload">
+                                    <i class="bi bi-upload"></i> Upload
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Настройки для custom режима -->
+
                     <div id="custom-layers-container" style="display: none;">
                         <div class="layer-card">
                             <div class="layer-header">
-                                <span class="layer-name">Размеры</span>
+                                <span class="layer-name" data-i18n="card.customSize">Canvas Size</span>
                             </div>
                             <div class="layer-controls">
                                 <div class="control-label">
-                                    <label for="custom-width">Ширина</label>
+                                    <label for="custom-width" data-i18n="label.customWidth">Width</label>
                                     <input type="number" id="custom-width" class="select-dropdown" value="1024" min="100" max="3000">
                                 </div>
                                 <div class="control-label">
-                                    <label for="custom-height">Высота</label>
+                                    <label for="custom-height" data-i18n="label.customHeight">Height</label>
                                     <input type="number" id="custom-height" class="select-dropdown" value="1024" min="100" max="3000">
                                 </div>
                                 <div class="control-label">
-                                    <button id="apply-custom-size" class="btn btn-success">
-                                        <i class="bi bi-check2-circle"></i> Применить размер
+                                    <button id="apply-custom-size" class="btn btn-success" data-i18n="button.customApply">
+                                        <i class="bi bi-check2-circle"></i> Apply size
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="layer-card">
                             <div class="layer-header">
-                                <span class="layer-name">Загрузка слоев</span>
+                                <span class="layer-name" data-i18n="card.customUploads">Layer Uploads</span>
                             </div>
                             <div class="layer-controls">
                                 <div class="control-label">
-                                    <button id="upload-bg-btn" class="btn btn-primary">
-                                        <i class="bi bi-upload"></i> PNG с маской
+                                    <button id="upload-bg-btn" class="btn btn-primary" data-i18n="button.customBgUploadDetailed">
+                                        <i class="bi bi-upload"></i> Upload PNG with transparency (mask)
                                     </button>
                                 </div>
                                 <div class="control-label">
-                                    <button id="upload-top-layer-btn" class="btn btn-primary">
-                                        <i class="bi bi-upload"></i> Верхний слой
+                                    <button id="upload-top-layer-btn" class="btn btn-primary" data-i18n="button.customTopUploadDetailed">
+                                        <i class="bi bi-upload"></i> Upload top layer
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Фильтры -->
+
                     <div class="layer-card">
                         <div class="layer-header">
-                            <span class="layer-name">Фильтры</span>
+                            <span class="layer-name" data-i18n="card.filters">Filters</span>
                         </div>
                         <div class="layer-controls">
                             <div class="control-label">
-                                <label for="topLayerColorFilter">Цветовой фильтр</label>
-                                <select id="topLayerColorFilter" class="select-dropdown">
-                                    <option value="none" selected>Без фильтра</option>
-                                    <option value="red">Красный</option>
-                                    <option value="green">Зеленый</option>
-                                    <option value="blue">Синий</option>
-                                    <option value="yellow">Желтый</option>
-                                    <option value="purple">Фиолетовый</option>
-                                    <option value="orange">Оранжевый</option>
-                                    <option value="custom">Свой цвет</option>
-                                </select>
+                                <label for="topLayerColorFilter" data-i18n="label.topFilter">Color filter</label>
+                                <select id="topLayerColorFilter" class="select-dropdown"></select>
                             </div>
                             <div id="customColorContainer" class="control-label" style="display: none;">
-                                <label for="customTopLayerColor">Выберите цвет</label>
+                                <label for="customTopLayerColor" data-i18n="label.customColor">Choose color</label>
                                 <input type="color" id="customTopLayerColor" class="select-dropdown" value="#ff0000">
                             </div>
                             <div id="filterOptionsContainer" class="control-label" style="display: none;">
-                                <label for="filterOpacity">Прозрачность</label>
+                                <label for="filterOpacity" data-i18n="label.filterOpacity">Opacity</label>
                                 <input type="range" id="filterOpacity" class="slider" min="0" max="1" step="0.1" value="0.5">
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Настройки логотипа -->
+
                     <div class="layer-card">
                         <div class="layer-header">
-                            <span class="layer-name">Позиция логотипа</span>
+                            <span class="layer-name" data-i18n="card.logoPosition">Logo Placement</span>
                         </div>
                         <div class="layer-controls">
                             <div class="control-label">
-                                <label for="logoX">X позиция</label>
+                                <label for="logoX" data-i18n="label.logoX">X position</label>
                                 <input type="range" id="logoX" class="slider" min="0" max="100" value="50">
                             </div>
                             <div class="control-label">
-                                <label for="logoY">Y позиция</label>
+                                <label for="logoY" data-i18n="label.logoY">Y position</label>
                                 <input type="range" id="logoY" class="slider" min="0" max="100" value="50">
                             </div>
                             <div class="control-label">
-                                <label for="logoScale">Масштаб</label>
+                                <label for="logoScale" data-i18n="label.logoScale">Scale</label>
                                 <input type="range" id="logoScale" class="slider" min="0.1" max="3" step="0.1" value="1">
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Сохранение -->
+
                     <div class="layer-card">
                         <div class="layer-header">
-                            <span class="layer-name">Сохранение</span>
+                            <span class="layer-name" data-i18n="card.export">Export</span>
                         </div>
                         <div class="layer-controls">
                             <div class="control-label">
-                                <button id="saveManual" class="btn btn-success">
-                                    <i class="bi bi-download"></i> Сохранить
+                                <button id="saveManual" class="btn btn-success" data-i18n="button.save">
+                                    <i class="bi bi-download"></i> Download
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </aside>
-            
+
             <main class="canvas-container">
                 <div class="canvas-toolbar">
-                    <h3>Предварительный просмотр</h3>
+                    <h3 data-i18n="toolbar.previewTitle">Preview</h3>
                     <div class="toolbar-spacer"></div>
-                    <button id="saveBlobUrl" class="btn btn-primary">
-                        <i class="bi bi-download"></i> Экспорт 1
+                    <button id="saveBlobUrl" class="btn btn-primary" data-i18n="button.saveBlob">
+                        <i class="bi bi-download"></i> Export (blob)
                     </button>
-                    <button id="saveDataUrl" class="btn btn-primary">
-                        <i class="bi bi-download"></i> Экспорт 2
+                    <button id="saveDataUrl" class="btn btn-primary" data-i18n="button.saveData">
+                        <i class="bi bi-download"></i> Export (data)
                     </button>
                 </div>
-                
+
                 <div class="canvas-wrapper">
                     <canvas id="iconCanvas" width="600" height="900"></canvas>
                 </div>
@@ -235,20 +222,18 @@
         </div>
     </div>
 
-    <!-- Скрытые input для загрузки файлов -->
+    <!-- Hidden inputs for file uploads -->
     <input type="file" id="imageUpload1" accept="image/*" style="display: none;">
     <input type="file" id="imageUpload2" accept="image/*" style="display: none;">
     <input type="file" id="imageUpload3" accept="image/*" style="display: none;">
     <input type="file" id="bg-upload" style="display: none;" accept="image/*">
     <input type="file" id="top-layer-upload" style="display: none;" accept="image/*">
 
-    <!-- Подключение скриптов -->
     <script src="js/script.js"></script>
     <script src="js/script-functions.js"></script>
     <script src="js/script-events.js"></script>
     <script src="js/script-init.js"></script>
     <script>
-        // Вызываем инициализацию приложения после загрузки всех скриптов
         document.addEventListener('DOMContentLoaded', () => {
             init();
         });

@@ -1,7 +1,10 @@
 {
   "coverTypes": {
     "type1": {
-      "name": "Тип 1",
+      "name": {
+        "en": "Preset Cover 1",
+        "ru": "Шаблон обложки 1"
+      },
       "imageFolder": "./img/",
       "logoPositioningParams": {
         "upperBound": 377.5,
@@ -13,7 +16,10 @@
       "topLayerImage": "Toplayer.png"
     },
     "type2": {
-      "name": "Тип 2",
+      "name": {
+        "en": "Preset Cover 2",
+        "ru": "Шаблон обложки 2"
+      },
       "imageFolder": "./img2/",
       "logoPositioningParams": {
         "upperBound": 350,
@@ -25,7 +31,10 @@
       "topLayerImage": "Toplayer.png"
     },
     "custom": {
-      "name": "Дизайнерский",
+      "name": {
+        "en": "Custom Cover",
+        "ru": "Пользовательская обложка"
+      },
       "imageFolder": "",
       "logoPositioningParams": {
         "upperBound": 300,
@@ -43,23 +52,119 @@
     },
     "filters": {
       "options": [
-        {"id": "none", "name": "Без фильтра"},
-        {"id": "red", "name": "Красный", "color": "rgba(255, 0, 0, $opacity)"},
-        {"id": "green", "name": "Зеленый", "color": "rgba(0, 255, 0, $opacity)"},
-        {"id": "blue", "name": "Синий", "color": "rgba(0, 0, 255, $opacity)"},
-        {"id": "yellow", "name": "Желтый", "color": "rgba(255, 255, 0, $opacity)"},
-        {"id": "purple", "name": "Фиолетовый", "color": "rgba(128, 0, 128, $opacity)"},
-        {"id": "orange", "name": "Оранжевый", "color": "rgba(255, 165, 0, $opacity)"},
-        {"id": "custom", "name": "Свой цвет"}
+        {
+          "id": "none",
+          "name": {
+            "en": "No Filter",
+            "ru": "Без фильтра"
+          }
+        },
+        {
+          "id": "red",
+          "name": {
+            "en": "Red",
+            "ru": "Красный"
+          },
+          "color": "rgba(255, 0, 0, $opacity)"
+        },
+        {
+          "id": "green",
+          "name": {
+            "en": "Green",
+            "ru": "Зелёный"
+          },
+          "color": "rgba(0, 255, 0, $opacity)"
+        },
+        {
+          "id": "blue",
+          "name": {
+            "en": "Blue",
+            "ru": "Синий"
+          },
+          "color": "rgba(0, 0, 255, $opacity)"
+        },
+        {
+          "id": "yellow",
+          "name": {
+            "en": "Yellow",
+            "ru": "Жёлтый"
+          },
+          "color": "rgba(255, 255, 0, $opacity)"
+        },
+        {
+          "id": "purple",
+          "name": {
+            "en": "Purple",
+            "ru": "Пурпурный"
+          },
+          "color": "rgba(128, 0, 128, $opacity)"
+        },
+        {
+          "id": "orange",
+          "name": {
+            "en": "Orange",
+            "ru": "Оранжевый"
+          },
+          "color": "rgba(255, 165, 0, $opacity)"
+        },
+        {
+          "id": "custom",
+          "name": {
+            "en": "Custom",
+            "ru": "Пользовательский"
+          }
+        }
       ],
       "blendModes": [
-        {"id": "multiply", "name": "Умножение"},
-        {"id": "screen", "name": "Экран"},
-        {"id": "overlay", "name": "Перекрытие"},
-        {"id": "color", "name": "Цвет"},
-        {"id": "hue", "name": "Оттенок"},
-        {"id": "saturation", "name": "Насыщенность"},
-        {"id": "soft-light", "name": "Мягкий свет"}
+        {
+          "id": "multiply",
+          "name": {
+            "en": "Multiply",
+            "ru": "Умножение"
+          }
+        },
+        {
+          "id": "screen",
+          "name": {
+            "en": "Screen",
+            "ru": "Экран"
+          }
+        },
+        {
+          "id": "overlay",
+          "name": {
+            "en": "Overlay",
+            "ru": "Перекрытие"
+          }
+        },
+        {
+          "id": "color",
+          "name": {
+            "en": "Color",
+            "ru": "Цвет"
+          }
+        },
+        {
+          "id": "hue",
+          "name": {
+            "en": "Hue",
+            "ru": "Тон"
+          }
+        },
+        {
+          "id": "saturation",
+          "name": {
+            "en": "Saturation",
+            "ru": "Насыщенность"
+          }
+        },
+        {
+          "id": "soft-light",
+          "name": {
+            "en": "Soft Light",
+            "ru": "Мягкий свет"
+          }
+        }
       ],
       "defaultIntensity": 0.7,
       "defaultBlendMode": "multiply",
@@ -67,22 +172,118 @@
     },
     "logo": {
       "blendModes": [
-        {"id": "normal", "name": "Обычный"},
-        {"id": "multiply", "name": "Умножение"},
-        {"id": "screen", "name": "Экран"},
-        {"id": "overlay", "name": "Перекрытие"},
-        {"id": "darken", "name": "Затемнение"},
-        {"id": "lighten", "name": "Осветление"},
-        {"id": "color-dodge", "name": "Осветление основы"},
-        {"id": "color-burn", "name": "Затемнение основы"},
-        {"id": "hard-light", "name": "Жесткий свет"},
-        {"id": "soft-light", "name": "Мягкий свет"},
-        {"id": "difference", "name": "Разница"},
-        {"id": "exclusion", "name": "Исключение"},
-        {"id": "hue", "name": "Оттенок"},
-        {"id": "saturation", "name": "Насыщенность"},
-        {"id": "color", "name": "Цвет"},
-        {"id": "luminosity", "name": "Яркость"}
+        {
+          "id": "normal",
+          "name": {
+            "en": "Normal",
+            "ru": "Обычный"
+          }
+        },
+        {
+          "id": "multiply",
+          "name": {
+            "en": "Multiply",
+            "ru": "Умножение"
+          }
+        },
+        {
+          "id": "screen",
+          "name": {
+            "en": "Screen",
+            "ru": "Экран"
+          }
+        },
+        {
+          "id": "overlay",
+          "name": {
+            "en": "Overlay",
+            "ru": "Перекрытие"
+          }
+        },
+        {
+          "id": "darken",
+          "name": {
+            "en": "Darken",
+            "ru": "Затемнение"
+          }
+        },
+        {
+          "id": "lighten",
+          "name": {
+            "en": "Lighten",
+            "ru": "Осветление"
+          }
+        },
+        {
+          "id": "color-dodge",
+          "name": {
+            "en": "Color Dodge",
+            "ru": "Осветление основы"
+          }
+        },
+        {
+          "id": "color-burn",
+          "name": {
+            "en": "Color Burn",
+            "ru": "Затемнение основы"
+          }
+        },
+        {
+          "id": "hard-light",
+          "name": {
+            "en": "Hard Light",
+            "ru": "Жёсткий свет"
+          }
+        },
+        {
+          "id": "soft-light",
+          "name": {
+            "en": "Soft Light",
+            "ru": "Мягкий свет"
+          }
+        },
+        {
+          "id": "difference",
+          "name": {
+            "en": "Difference",
+            "ru": "Разница"
+          }
+        },
+        {
+          "id": "exclusion",
+          "name": {
+            "en": "Exclusion",
+            "ru": "Исключение"
+          }
+        },
+        {
+          "id": "hue",
+          "name": {
+            "en": "Hue",
+            "ru": "Тон"
+          }
+        },
+        {
+          "id": "saturation",
+          "name": {
+            "en": "Saturation",
+            "ru": "Насыщенность"
+          }
+        },
+        {
+          "id": "color",
+          "name": {
+            "en": "Color",
+            "ru": "Цвет"
+          }
+        },
+        {
+          "id": "luminosity",
+          "name": {
+            "en": "Luminosity",
+            "ru": "Светимость"
+          }
+        }
       ],
       "defaultOpacity": 1.0,
       "defaultScale": 1.0,
@@ -100,4 +301,4 @@
       "defaultOpacity": 1.0
     }
   }
-} 
+}
